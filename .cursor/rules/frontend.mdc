@@ -6,13 +6,13 @@ alwaysApply: false
 
 # Frontend
 
-**Status:** `frontend/` does not exist. Stop searching for React/Next.js in repo.
+**Status:** `frontend/` does not exist. Do not search for React/Next.js in repo.
 
 ## When Adding
 
 - Location: `frontend/` at repo root (Next.js + TypeScript per `.gitignore`)
 - API: `process.env.NEXT_PUBLIC_API_URL` — dev default `http://localhost:5101`
-- Mirror backend entities: `frontend/src/features/{entity}/` maps to `Features/{Entity}Feature/`
+- Mirror backend: `frontend/src/features/{entity}/` ↔ `Features/{Entity}Feature/`
 
 ## API Contract
 
@@ -25,9 +25,9 @@ type Paginated<T> = { items: T[]; total: number; page: number; limit: number; to
 - Display: `nameAr` when locale=`ar`, else `nameEn` — enable RTL
 - Server Components for fetch; `"use client"` only for interactivity/forms
 
-## Scale Rules
+## Scale
 
-- One feature folder per entity — do not cross-import between features
+- One feature folder per entity — no cross-imports between features
 - Shared UI → `frontend/src/components/ui/` only
 - API client per entity → `frontend/src/features/{entity}/api.ts`
-- Never duplicate backend validation (slugs, delete guards, uniqueness)
+- Never duplicate backend rules (slugs, delete guards, uniqueness)

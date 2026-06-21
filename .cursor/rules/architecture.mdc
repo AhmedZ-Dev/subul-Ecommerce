@@ -5,10 +5,10 @@ alwaysApply: true
 
 # Subul-Ecommerce
 
-**Stack:** ASP.NET Core 10 + PostgreSQL + EF Core + MediatR. Backend only (`backend/`). Frontend planned in `frontend/` — not built.
+**Stack:** ASP.NET Core 10 + PostgreSQL + EF Core + MediatR. Backend in `backend/`. Tests in `backend.Tests/`. Frontend planned — not built.
 
-**Template:** `backend/Features/CategoryFeature/` — copy for every new entity.
-**Schema:** `DATABASE.md` (read one table section only). **Seed example:** `productForExample.sql`.
+**Template:** `backend/Features/CategoryFeature/` + matching tests in `backend.Tests/Features/CategoryFeature/`.
+**Schema:** `DATABASE.md` (one table section). **Seed example:** `productForExample.sql`.
 
 ## Structure
 
@@ -17,15 +17,23 @@ backend/
 ├── Common/              Result, ApiResponse, middleware, ValidationBehavior
 ├── DependencyInjection/ AddApplication(), AddInfrastructure()
 ├── Domain/Entities/     51 scaffolded partial classes
-├── Features/{Entity}Feature/{Operation}/  Endpoint + Handler + Command|Query
-└── Infrastructure/Persistence/  AppDbContext.cs (scaffold) + AppDbContext.Partial.cs (edit here)
+├── Features/{Entity}Feature/{Operation}/  *Endpoint.cs + Handler + Command|Query
+└── Infrastructure/Persistence/  AppDbContext.cs (scaffold) + AppDbContext.Partial.cs (edit)
+
+backend.Tests/
+├── Infrastructure/      DatabaseFixture, DatabaseCollection, TestWebApplicationFactory
+└── Features/{Entity}Feature/  Handler tests + {Entity}IntegrationTests.cs
+
+.github/workflows/ci.yml   build + test + CodeQL + dependency audit + Gitleaks
 ```
 
 ## Flow
 
 `Endpoint → ISender → ValidationBehavior → Handler(AppDbContext) → Result<T> → ToActionResult() → ApiResponse<T>`
 
-Failure strings: `"not found"`→404 | `"already exists"`→409 | else→400. POST uses `StatusCodes.Status201Created`.
+Failure strings: `"not found"`→404 | `"already exists"`→409 | else→400. POST → `StatusCodes.Status201Created`.
+
+`Program.cs` ends with `public partial class Program { }` — required for `WebApplicationFactory<Program>`.
 
 ## Naming
 
@@ -33,31 +41,41 @@ Failure strings: `"not found"`→404 | `"already exists"`→409 | else→400. PO
 |------|---------|---------|
 | Feature | `{Entity}Feature` | `CategoryFeature` |
 | Operation | `{Verb}{Entity}` | `CreateCategory` |
-| Files | `{Op}Endpoint/Handler/Command` | `CreateCategoryHandler.cs` |
+| Files | `{Op}Endpoint.cs`, `{Op}Handler.cs`, `{Op}Command.cs` | folder `CreateCategory/` |
+| Class in Endpoint file | `{Op}Controller` | `CreateCategoryController` in `CreateCategoryEndpoint.cs` |
 | Route | `api/{plural}` | `api/categories` |
 | Namespace | `backend` | lowercase root |
 
-## Scan Limits (large codebase)
+## Scan Limits
 
-**Read:** target `Features/{Entity}Feature/`, one `Domain/Entities/{Entity}.cs`, one `DATABASE.md` table section.
-**Skip:** all 51 entities, full `AppDbContext.cs` (~2300 lines), unrelated features, React/Next.js search (none exist).
+| Task | Read only |
+|------|-----------|
+| New CRUD entity | `CategoryFeature/` (5 ops), `Domain/Entities/{Entity}.cs`, one `DATABASE.md` section |
+| Edit one operation | That op's 3 files under `Features/{Entity}Feature/{Op}/` |
+| Add tests | Mirror file in `backend.Tests/Features/CategoryFeature/` + `Infrastructure/DatabaseFixture.cs` |
+| DB config | `AppDbContext.Partial.cs` only |
 
-Details: backend→`backend.mdc` | security→`security.mdc` | CRUD steps→`docs/ai/feature-workflow.md`
+**Never read:** all 51 entities, full `AppDbContext.cs` (~2300 lines), unrelated features, `bin/`/`obj/`, frontend search (no `frontend/` yet).
 
-## Anti-Patterns (project-specific)
+Details: backend→`backend.mdc` | tests→`testing.mdc` | security→`security.mdc` | CRUD→`docs/ai/feature-workflow.md`
 
-| Don't | Why / Do instead |
-|-------|------------------|
-| Assume JWT/`[Authorize]` | Package installed; `Program.cs` has no `UseAuthentication()` |
-| Assume FluentValidation on Category | Pipeline registered; Category validates inline in handlers |
-| Register/use `LoggingBehavior` | File exists; not in DI |
-| Use `Error` record | Unused; handlers use `Result.Failure(string)` |
+## Anti-Patterns (recurring agent mistakes)
+
+| Don't | Do instead |
+|-------|------------|
+| Assume JWT/`[Authorize]` works | Package installed; no `UseAuthentication()` in `Program.cs` |
+| Assume FluentValidation on Category | Infra wired; Category validates inline in handlers — no validators yet |
+| Guess entity fields | Read `Domain/Entities/{Entity}.cs` first (e.g. `Product` needs `Currency`, `Status` — no `IsActive`/`IsDigital`) |
+| Rename `*Controller` ↔ `*Endpoint` | File: `{Op}Endpoint.cs`. Class: `{Op}Controller`. Keep both. |
+| Use `UseInMemoryDatabase` for FK/delete tests | Testcontainers via `DatabaseFixture` |
+| Use `DateTime.UtcNow` | `DateTime.Now` + `Npgsql.EnableLegacyTimestampBehavior` switch |
+| Edit `AppDbContext.cs` | Scaffold only — use `AppDbContext.Partial.cs` |
+| Create EF migrations | Schema via SQL + `DATABASE.md` |
 | Add repository/service layer | Handlers inject `AppDbContext` directly |
 | Throw for business errors | `Result.Failure("… not found")` |
-| Edit `AppDbContext.cs` | Scaffold only; use `AppDbContext.Partial.cs` |
-| Create EF migrations | Schema via SQL + `DATABASE.md` |
-| Extract shared DTOs early | Duplicate like Category until 3+ features need it |
-| Use `DateTime.UtcNow` | Project uses `DateTime.Now` + legacy Npgsql switch |
+| Use unused `Error` record | `Result.Failure(string)` |
+| Register `LoggingBehavior` | File exists; not in DI |
 | Query `Attribute` entity | DbContext alias: `AttributeEntity` |
-| Build frontend before backend feature | No `frontend/` yet; API first |
-| Duplicate slug/delete logic in UI | Backend owns business rules |
+| Extract shared DTOs early | Duplicate like Category until 3+ features need it |
+| Build frontend before backend API | API first — no `frontend/` yet |
+| Search entire repo for patterns | Grep within `Features/{Entity}Feature/` or `backend.Tests/Features/{Entity}Feature/` |

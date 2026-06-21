@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Auth (not implemented)
 
-All routes are **public**. JWT package referenced; `Program.cs` lacks `UseAuthentication()`.
+All routes public. JWT package referenced; `Program.cs` has `UseAuthorization()` but no `UseAuthentication()`.
 Before `[Authorize]`: wire JWT in `Program.cs`, bcrypt `PasswordHash` (`User`, `AdminUser`), log admin actions to `ActivityLog`.
 
 ## Secrets — never commit
@@ -18,7 +18,7 @@ Production DB creds via env/secret manager — not `appsettings.Development.json
 
 ## Input
 
-- All input via Command/Query records; validate before EF
+- Input via Command/Query records (Update via Request → Command mapping)
 - EF Core only for DB — no string-concat SQL
 - `ToLower()` + trim for case-insensitive checks (Category pattern)
 - Never return `PasswordHash` or tokens in responses
@@ -26,9 +26,14 @@ Production DB creds via env/secret manager — not `appsettings.Development.json
 ## Errors
 
 `Result.Failure` for business errors — no stack traces. Middleware returns generic message on 500.
+FluentValidation → 400 with `errors[]` via `ExceptionHandlingMiddleware`.
+
+## CI security
+
+`.github/workflows/ci.yml`: CodeQL (C#), `dotnet list package --vulnerable`, Gitleaks on push/PR.
 
 ## Future
 
 - `pages.content_*`: sanitize HTML on write, escape on render (CMS)
-- Payment endpoints: mask details; persist in `PaymentTransaction` only
+- Payment: mask details; persist in `PaymentTransaction` only
 - Role checks via `admin_users.role` when auth lands

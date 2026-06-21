@@ -1,37 +1,61 @@
 ---
-description: Testing — no project yet; patterns when adding
-globs: backend/**/*.cs
+description: backend.Tests patterns — Testcontainers, handler + integration
+globs: backend.Tests/**/*
 alwaysApply: false
 ---
 
 # Testing
 
-**No test project.** Do not search for existing tests.
+**Project:** `backend.Tests/` — xUnit + Testcontainers PostgreSQL + `Microsoft.AspNetCore.Mvc.Testing`.
+**CI:** `.github/workflows/ci.yml` runs `dotnet test` on push/PR to `main`/`develop`. Requires Docker.
 
-## When Adding
+## Layout
 
 ```
-backend.Tests/Features/{Entity}Feature/{Operation}HandlerTests.cs
+backend.Tests/
+├── Infrastructure/
+│   DatabaseFixture.cs          # shared PostgreSQL container + EnsureCreated
+│   DatabaseCollection.cs       # [CollectionDefinition("Database")]
+│   TestWebApplicationFactory.cs
+└── Features/{Entity}Feature/
+    {Op}HandlerTests.cs
+    {Entity}IntegrationTests.cs
 ```
 
-xUnit + `Microsoft.AspNetCore.Mvc.Testing`. Mirror `Features/` structure.
+Mirror `backend/Features/` structure. Template: `CategoryFeature/` (5 handler test files + integration).
 
 ## Handler Tests
 
-Arrange DbContext → Act `handler.Handle(cmd, CT)` → Assert `IsSuccess` or error string.
+```csharp
+[Collection("Database")]
+public class CreateCategoryHandlerTests(DatabaseFixture fixture)
+{
+    // fixture.CreateContext() → new Handler(context) → handler.Handle(cmd, CT)
+}
+```
 
-Must cover: success, `"not found"`, `"already exists"`, delete-with-children failure.
+Assert `result.IsSuccess` or error contains `"not found"` / `"already exists"`.
+Cover: success, not found, already exists, delete-with-children (and entity-specific cases from Category).
+
+Direct handler instantiation — do not mock MediatR.
 
 ## Integration Tests
 
-`WebApplicationFactory<Program>` — assert status (201/404/409/400) + `ApiResponse` shape (`success`, `data`).
+`TestWebApplicationFactory(fixture.ConnectionString)` + `HttpClient`.
+Assert HTTP status (201/404/409/400) + JSON `success`/`data` shape (`CategoryIntegrationTests.cs`).
 
-Prefer Testcontainers PostgreSQL over `UseInMemoryDatabase` for relational checks.
+Use `Guid.NewGuid()` in names to avoid collisions. `[Collection("Database")]` shares one container.
 
-## Priority (MVP)
+## Requirements
 
-Category → Product → Cart/Order → Auth
+- Docker running locally for `dotnet test`
+- `AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true)` — in `DatabaseFixture` and `Program.cs`
+- `public partial class Program { }` at end of `Program.cs`
 
 ## Skip
 
-EF scaffold mapping tests, full JSON snapshots, mocking MediatR in HTTP tests.
+EF scaffold mapping tests, full JSON snapshots, `UseInMemoryDatabase`, mocking MediatR in HTTP tests.
+
+## Priority (next entities)
+
+Product → Cart/Order → Auth

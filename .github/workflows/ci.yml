@@ -1,0 +1,150 @@
+name: CI — Build · Test · Security
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  DOTNET_VERSION: "10.x"
+  TEST_PROJECT: "backend.Tests/backend.Tests.csproj"
+  BACKEND_PROJECT: "backend/backend.csproj"
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Job 1: Build + Unit & Integration Tests
+  # ─────────────────────────────────────────────────────────────
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ env.TEST_PROJECT }}
+
+      - name: Build (no warnings-as-errors)
+        run: dotnet build ${{ env.TEST_PROJECT }} --no-restore --configuration Release
+
+      - name: Run tests with coverage
+        run: |
+          dotnet test ${{ env.TEST_PROJECT }} \
+            --no-build \
+            --configuration Release \
+            --logger "trx;LogFileName=test-results.trx" \
+            --collect:"XPlat Code Coverage" \
+            -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=cobertura
+        env:
+          # Testcontainers needs Docker socket on the runner
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: "**/*.trx"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: "**/coverage.cobertura.xml"
+
+  # ─────────────────────────────────────────────────────────────
+  # Job 2: CodeQL — Static Application Security Testing (SAST)
+  # ─────────────────────────────────────────────────────────────
+  codeql:
+    name: CodeQL Security Scan
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          queries: security-and-quality
+
+      - name: Build for CodeQL analysis
+        run: |
+          dotnet restore ${{ env.BACKEND_PROJECT }}
+          dotnet build ${{ env.BACKEND_PROJECT }} --no-restore --configuration Release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
+
+  # ─────────────────────────────────────────────────────────────
+  # Job 3: Dependency Vulnerability Audit
+  # ─────────────────────────────────────────────────────────────
+  dependency-audit:
+    name: Dependency Vulnerability Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore backend packages
+        run: dotnet restore ${{ env.BACKEND_PROJECT }}
+
+      - name: Check for vulnerable packages
+        run: |
+          dotnet list ${{ env.BACKEND_PROJECT }} package --vulnerable --include-transitive 2>&1 | tee vuln-report.txt
+          if grep -qi "critical\|high" vuln-report.txt; then
+            echo "::error::Critical or High vulnerabilities found in dependencies!"
+            cat vuln-report.txt
+            exit 1
+          fi
+
+      - name: Upload vulnerability report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vulnerability-report
+          path: vuln-report.txt
+
+  # ─────────────────────────────────────────────────────────────
+  # Job 4: Secret Detection (Gitleaks)
+  # ─────────────────────────────────────────────────────────────
+  secrets-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

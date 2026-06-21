@@ -8,20 +8,21 @@ alwaysApply: false
 
 Copy `Features/CategoryFeature/` — 5 operations × 3 files each:
 
-| Operation | Route | File prefix |
-|-----------|-------|-------------|
+| Operation | Route | Folder |
+|-----------|-------|--------|
 | List{Entity}Paginated | GET `api/{entities}` | `ListCategoryPaginated/` |
 | Create{Entity} | POST `api/{entities}` | `CreateCategory/` |
 | GetById{Entity} | GET `api/{entities}/{id:long}` | `GetByIdCategory/` |
 | Update{Entity} | PUT `api/{entities}/{id:long}` | `UpdateCategory/` |
 | Delete{Entity} | DELETE `api/{entities}/{id:long}` | `DeleteCategory/` |
 
-## Controller (`*Endpoint.cs`)
+## Controller (`*Endpoint.cs` → class `*Controller`)
 
 - `[ApiController]` + `[Route("api/…")]` + `[Tags("…")]`
 - Primary ctor `(ISender sender)` — zero business logic
+- Create/Get/List/Delete: send Command/Query directly from body or route
+- Update: `[FromBody] Update{Entity}Request` → map to `Update{Entity}Command` with route `id`
 - `sender.Send(cmd)` → `result.ToActionResult()` (201 for POST)
-- Update: map `Update{Entity}Request` body → `Update{Entity}Command` with route `id`
 
 Ref: `CreateCategoryEndpoint.cs`, `UpdateCategoryEndpoint.cs`
 
@@ -29,26 +30,22 @@ Ref: `CreateCategoryEndpoint.cs`, `UpdateCategoryEndpoint.cs`
 
 - `IRequestHandler<T, Result<TResponse>>` + `(AppDbContext context)`
 - Reads: `AsNoTracking()`. Writes: tracked + `SaveChangesAsync(cancellationToken)`
-- Trim inputs: `command.NameEn.Trim()`
-- Bilingual search: check both `NameEn` and `NameAr` (see `ListCategoryPaginatedHandler.cs`)
-- List defaults: `Page=1`, `Limit=10`; response `(items, total, page, limit, totalPages)`
-- Delete: check FK/children first (`DeleteCategoryHandler.cs`)
+- Trim: `command.NameEn.Trim()`. Case checks: `.ToLower()` (Category pattern)
+- Bilingual search: both `NameEn` and `NameAr` (`ListCategoryPaginatedHandler.cs`)
+- List defaults: `Page=1`, `Limit=10` → `(items, total, page, limit, totalPages)`
+- Delete: FK/children guard first (`DeleteCategoryHandler.cs`)
 - Slug: normalize + uniqueness loop (`CreateCategoryHandler.cs`)
+- Timestamps: `DateTime.Now`
 
-## Records (`*Command.cs` / `*Query.cs`)
+## Records
 
-```csharp
-public record CreateCategoryCommand(...) : IRequest<Result<CreateCategoryResponse>>;
-public record CreateCategoryResponse(...);
-```
+Command/Query + Response co-located in `{Op}Command.cs` or `{Op}Query.cs`.
+Update adds separate `Update{Entity}Request` in same file as command.
 
-Co-locate command/query + response in same file.
+## Validation (current state)
 
-## Validation
+- **Category:** all domain rules in handler (uniqueness, FK, slug, delete guards)
+- **Shape validation:** `ValidationBehavior` + FluentValidation registered — add `AbstractValidator<T>` per command when needed; throws → middleware 400 + `errors[]`
+- Do not move domain rules (uniqueness, FK) into validators
 
-- **Shape:** `AbstractValidator<T>` → auto-registered, throws → middleware 400 + `errors[]`
-- **Domain:** uniqueness, FK, delete guards — stay in handler
-
-## Registration
-
-Handlers + validators auto-register from assembly. Never manual DI for individual handlers.
+Handlers + validators auto-register from assembly. No manual DI per handler.
