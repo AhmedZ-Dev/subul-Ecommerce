@@ -1,0 +1,54 @@
+---
+description: Backend feature implementation rules
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend
+
+Copy `Features/CategoryFeature/` — 5 operations × 3 files each:
+
+| Operation | Route | File prefix |
+|-----------|-------|-------------|
+| List{Entity}Paginated | GET `api/{entities}` | `ListCategoryPaginated/` |
+| Create{Entity} | POST `api/{entities}` | `CreateCategory/` |
+| GetById{Entity} | GET `api/{entities}/{id:long}` | `GetByIdCategory/` |
+| Update{Entity} | PUT `api/{entities}/{id:long}` | `UpdateCategory/` |
+| Delete{Entity} | DELETE `api/{entities}/{id:long}` | `DeleteCategory/` |
+
+## Controller (`*Endpoint.cs`)
+
+- `[ApiController]` + `[Route("api/…")]` + `[Tags("…")]`
+- Primary ctor `(ISender sender)` — zero business logic
+- `sender.Send(cmd)` → `result.ToActionResult()` (201 for POST)
+- Update: map `Update{Entity}Request` body → `Update{Entity}Command` with route `id`
+
+Ref: `CreateCategoryEndpoint.cs`, `UpdateCategoryEndpoint.cs`
+
+## Handler (`*Handler.cs`)
+
+- `IRequestHandler<T, Result<TResponse>>` + `(AppDbContext context)`
+- Reads: `AsNoTracking()`. Writes: tracked + `SaveChangesAsync(cancellationToken)`
+- Trim inputs: `command.NameEn.Trim()`
+- Bilingual search: check both `NameEn` and `NameAr` (see `ListCategoryPaginatedHandler.cs`)
+- List defaults: `Page=1`, `Limit=10`; response `(items, total, page, limit, totalPages)`
+- Delete: check FK/children first (`DeleteCategoryHandler.cs`)
+- Slug: normalize + uniqueness loop (`CreateCategoryHandler.cs`)
+
+## Records (`*Command.cs` / `*Query.cs`)
+
+```csharp
+public record CreateCategoryCommand(...) : IRequest<Result<CreateCategoryResponse>>;
+public record CreateCategoryResponse(...);
+```
+
+Co-locate command/query + response in same file.
+
+## Validation
+
+- **Shape:** `AbstractValidator<T>` → auto-registered, throws → middleware 400 + `errors[]`
+- **Domain:** uniqueness, FK, delete guards — stay in handler
+
+## Registration
+
+Handlers + validators auto-register from assembly. Never manual DI for individual handlers.

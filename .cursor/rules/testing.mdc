@@ -1,0 +1,37 @@
+---
+description: Testing — no project yet; patterns when adding
+globs: backend/**/*.cs
+alwaysApply: false
+---
+
+# Testing
+
+**No test project.** Do not search for existing tests.
+
+## When Adding
+
+```
+backend.Tests/Features/{Entity}Feature/{Operation}HandlerTests.cs
+```
+
+xUnit + `Microsoft.AspNetCore.Mvc.Testing`. Mirror `Features/` structure.
+
+## Handler Tests
+
+Arrange DbContext → Act `handler.Handle(cmd, CT)` → Assert `IsSuccess` or error string.
+
+Must cover: success, `"not found"`, `"already exists"`, delete-with-children failure.
+
+## Integration Tests
+
+`WebApplicationFactory<Program>` — assert status (201/404/409/400) + `ApiResponse` shape (`success`, `data`).
+
+Prefer Testcontainers PostgreSQL over `UseInMemoryDatabase` for relational checks.
+
+## Priority (MVP)
+
+Category → Product → Cart/Order → Auth
+
+## Skip
+
+EF scaffold mapping tests, full JSON snapshots, mocking MediatR in HTTP tests.

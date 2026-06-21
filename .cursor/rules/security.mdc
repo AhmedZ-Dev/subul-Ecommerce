@@ -1,0 +1,34 @@
+---
+description: Security — auth state, secrets, input handling
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Security
+
+## Auth (not implemented)
+
+All routes are **public**. JWT package referenced; `Program.cs` lacks `UseAuthentication()`.
+Before `[Authorize]`: wire JWT in `Program.cs`, bcrypt `PasswordHash` (`User`, `AdminUser`), log admin actions to `ActivityLog`.
+
+## Secrets — never commit
+
+`.env*`, `appsettings.*.local.json`, `secrets.json`, `*.pem`, `*.key`, `*.pfx`
+Production DB creds via env/secret manager — not `appsettings.Development.json`.
+
+## Input
+
+- All input via Command/Query records; validate before EF
+- EF Core only for DB — no string-concat SQL
+- `ToLower()` + trim for case-insensitive checks (Category pattern)
+- Never return `PasswordHash` or tokens in responses
+
+## Errors
+
+`Result.Failure` for business errors — no stack traces. Middleware returns generic message on 500.
+
+## Future
+
+- `pages.content_*`: sanitize HTML on write, escape on render (CMS)
+- Payment endpoints: mask details; persist in `PaymentTransaction` only
+- Role checks via `admin_users.role` when auth lands

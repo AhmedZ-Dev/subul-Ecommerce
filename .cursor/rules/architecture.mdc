@@ -1,0 +1,63 @@
+---
+description: Core architecture, scan limits, anti-patterns
+alwaysApply: true
+---
+
+# Subul-Ecommerce
+
+**Stack:** ASP.NET Core 10 + PostgreSQL + EF Core + MediatR. Backend only (`backend/`). Frontend planned in `frontend/` — not built.
+
+**Template:** `backend/Features/CategoryFeature/` — copy for every new entity.
+**Schema:** `DATABASE.md` (read one table section only). **Seed example:** `productForExample.sql`.
+
+## Structure
+
+```
+backend/
+├── Common/              Result, ApiResponse, middleware, ValidationBehavior
+├── DependencyInjection/ AddApplication(), AddInfrastructure()
+├── Domain/Entities/     51 scaffolded partial classes
+├── Features/{Entity}Feature/{Operation}/  Endpoint + Handler + Command|Query
+└── Infrastructure/Persistence/  AppDbContext.cs (scaffold) + AppDbContext.Partial.cs (edit here)
+```
+
+## Flow
+
+`Endpoint → ISender → ValidationBehavior → Handler(AppDbContext) → Result<T> → ToActionResult() → ApiResponse<T>`
+
+Failure strings: `"not found"`→404 | `"already exists"`→409 | else→400. POST uses `StatusCodes.Status201Created`.
+
+## Naming
+
+| Item | Pattern | Example |
+|------|---------|---------|
+| Feature | `{Entity}Feature` | `CategoryFeature` |
+| Operation | `{Verb}{Entity}` | `CreateCategory` |
+| Files | `{Op}Endpoint/Handler/Command` | `CreateCategoryHandler.cs` |
+| Route | `api/{plural}` | `api/categories` |
+| Namespace | `backend` | lowercase root |
+
+## Scan Limits (large codebase)
+
+**Read:** target `Features/{Entity}Feature/`, one `Domain/Entities/{Entity}.cs`, one `DATABASE.md` table section.
+**Skip:** all 51 entities, full `AppDbContext.cs` (~2300 lines), unrelated features, React/Next.js search (none exist).
+
+Details: backend→`backend.mdc` | security→`security.mdc` | CRUD steps→`docs/ai/feature-workflow.md`
+
+## Anti-Patterns (project-specific)
+
+| Don't | Why / Do instead |
+|-------|------------------|
+| Assume JWT/`[Authorize]` | Package installed; `Program.cs` has no `UseAuthentication()` |
+| Assume FluentValidation on Category | Pipeline registered; Category validates inline in handlers |
+| Register/use `LoggingBehavior` | File exists; not in DI |
+| Use `Error` record | Unused; handlers use `Result.Failure(string)` |
+| Add repository/service layer | Handlers inject `AppDbContext` directly |
+| Throw for business errors | `Result.Failure("… not found")` |
+| Edit `AppDbContext.cs` | Scaffold only; use `AppDbContext.Partial.cs` |
+| Create EF migrations | Schema via SQL + `DATABASE.md` |
+| Extract shared DTOs early | Duplicate like Category until 3+ features need it |
+| Use `DateTime.UtcNow` | Project uses `DateTime.Now` + legacy Npgsql switch |
+| Query `Attribute` entity | DbContext alias: `AttributeEntity` |
+| Build frontend before backend feature | No `frontend/` yet; API first |
+| Duplicate slug/delete logic in UI | Backend owns business rules |
