@@ -11,6 +11,8 @@ alwaysApply: false
 All routes public. JWT package referenced; `Program.cs` has `UseAuthorization()` but no `UseAuthentication()`.
 Before `[Authorize]`: wire JWT in `Program.cs`, bcrypt `PasswordHash` (`User`, `AdminUser`), log admin actions to `ActivityLog`.
 
+**Guest checkout (keep public when auth lands):** `POST /api/orders`, `GET /api/orders/track`, all `api/carts/*` endpoints use `[AllowAnonymous]`. Cart merge after login: `POST /api/carts/merge`.
+
 ## Secrets — never commit
 
 `.env*`, `appsettings.*.local.json`, `secrets.json`, `*.pem`, `*.key`, `*.pfx`

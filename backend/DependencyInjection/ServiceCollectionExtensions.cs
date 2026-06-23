@@ -1,4 +1,5 @@
 using backend.Common.Behaviors;
+using backend.Common.Storage;
 using backend.Infrastructure.Persistence;
 using FluentValidation;
 using MediatR;
@@ -29,6 +30,9 @@ public static class ServiceCollectionExtensions
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
+
+        services.Configure<ImageStorageOptions>(configuration.GetSection(ImageStorageOptions.SectionName));
+        services.AddSingleton<IImageStorageService, LocalImageStorageService>();
 
         return services;
     }

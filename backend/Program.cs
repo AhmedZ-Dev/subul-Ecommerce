@@ -1,5 +1,6 @@
 using backend.Common.Middleware;
 using backend.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -23,6 +24,14 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+var imgPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, "..", "img"));
+Directory.CreateDirectory(imgPath);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(imgPath),
+    RequestPath = "/img"
+});
 
 app.UseAuthorization();
 
