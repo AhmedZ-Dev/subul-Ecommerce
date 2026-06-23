@@ -18,9 +18,10 @@ public class CreateOrderHandlerTests(DatabaseFixture fixture)
         var sessionId = Guid.NewGuid().ToString("N");
 
         var zoneHandler = new CreateShippingZoneHandler(context);
+        var zoneName = "Baghdad Zone " + Guid.NewGuid();
         var zone = await zoneHandler.Handle(
             new CreateShippingZoneCommand(
-                "Baghdad Zone",
+                zoneName,
                 Governorates: ["Baghdad"],
                 ShippingRates:
                 [

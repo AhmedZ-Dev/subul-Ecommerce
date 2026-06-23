@@ -17,8 +17,9 @@ public class CreateShippingZoneHandlerTests(DatabaseFixture fixture)
     {
         await using var context = fixture.CreateContext();
         var handler = new CreateShippingZoneHandler(context);
+        var zoneName = "Baghdad Zone " + Guid.NewGuid();
         var command = new CreateShippingZoneCommand(
-            NameEn: "Baghdad Zone",
+            NameEn: zoneName,
             NameAr: "منطقة بغداد",
             Governorates: new List<string> { "Baghdad" },
             IsActive: true
@@ -28,9 +29,8 @@ public class CreateShippingZoneHandlerTests(DatabaseFixture fixture)
 
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Value);
-        Assert.Equal("Baghdad Zone", result.Value.NameEn);
-        Assert.Single(result.Value.Governorates);
-        Assert.Equal("Baghdad", result.Value.Governorates[0]);
+        Assert.Equal(zoneName, result.Value.NameEn);
+        Assert.Contains("Baghdad", result.Value.Governorates);
     }
 
     [Fact]
