@@ -4,7 +4,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getCategories, getCategoryById } from '../api/category.api';
-import type { CategoryQueryParams } from '../types';
+import type { CategoryDto, CategoryQueryParams } from '../types';
 import { buildCategoryTree } from '../utils';
 import { CATEGORY_QUERY_KEYS } from '../constants';
 
@@ -21,22 +21,27 @@ export const categoryKeys = {
 
 // ─── useCategories ────────────────────────────────────────────────────────────
 
-export function useCategories(params: CategoryQueryParams = {}) {
+export function useCategories(params: CategoryQueryParams = {}, enabled = true) {
   return useQuery({
     queryKey: categoryKeys.list(params),
     queryFn: () => getCategories(params),
-    placeholderData: (prev) => prev, // keeps stale data visible while fetching next page
-    staleTime: 60_000, // categories change rarely
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    enabled,
   });
 }
 
 // ─── useCategory ──────────────────────────────────────────────────────────────
 
-export function useCategory(id: number, enabled = true) {
+export function useCategory(
+  id: number,
+  options?: { enabled?: boolean; initialData?: CategoryDto },
+) {
   return useQuery({
     queryKey: categoryKeys.detail(id),
     queryFn: () => getCategoryById(id),
-    enabled: enabled && id > 0,
+    enabled: (options?.enabled ?? true) && id > 0,
+    initialData: options?.initialData ?? undefined,
     staleTime: 60_000,
   });
 }
@@ -44,8 +49,11 @@ export function useCategory(id: number, enabled = true) {
 // ─── useCategoryTree ──────────────────────────────────────────────────────────
 // Derived query — fetches all categories and transforms flat list into tree on client
 
-export function useCategoryTree() {
-  const query = useCategories({ limit: 1000, sortBy: 'nameEn', sortOrder: 'asc' });
+export function useCategoryTree(enabled = true) {
+  const query = useCategories(
+    { limit: 1000, sortBy: 'nameEn', sortOrder: 'asc' },
+    enabled,
+  );
   return {
     ...query,
     data: query.data ? buildCategoryTree(query.data.items) : undefined,

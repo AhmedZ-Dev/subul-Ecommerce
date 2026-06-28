@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,14 +38,38 @@ import { FormActionsBar } from '@/components/layout/form-actions-bar';
 import { StatusIndicator } from '@/components/ui/status-indicator';
 import { Loader2, Save, X } from 'lucide-react';
 import { messages } from '@/lib/messages.ar';
-import { createCategorySchema, type CreateCategoryInput } from '../schemas/category.schema';
-import { useCreateCategory, useUpdateCategory } from '../hooks/useCategoryMutations';
-import { CategoryParentSelect } from './category-parent-select';
-import type { CategoryDto } from '../types';
-import { generateSlug } from '../utils';
-import { CATEGORY_STATUS_TONES } from '../constants';
+import { createCategorySchema, type CreateCategoryInput } from '../../schemas/category.schema';
+import { useCreateCategory, useUpdateCategory } from '../../hooks/useCategoryMutations';
+import { CategoryParentSelect } from '../blocks/category-parent-select';
+import type { CategoryDto } from '../../types';
+import { generateSlug } from '../../utils';
+import { CATEGORY_STATUS_TONES } from '../../constants';
 
 const m = messages.category.form;
+
+function getDefaultValues(initialData?: CategoryDto | null): CreateCategoryInput {
+  if (initialData) {
+    return {
+      nameEn: initialData.nameEn,
+      nameAr: initialData.nameAr ?? '',
+      slug: initialData.slug,
+      descriptionEn: initialData.descriptionEn ?? '',
+      descriptionAr: initialData.descriptionAr ?? '',
+      parentId: initialData.parentId ?? null,
+      status: initialData.status,
+    };
+  }
+
+  return {
+    nameEn: '',
+    nameAr: '',
+    slug: '',
+    descriptionEn: '',
+    descriptionAr: '',
+    parentId: null,
+    status: 'active',
+  };
+}
 
 interface CategoryFormProps {
   initialData?: CategoryDto | null;
@@ -62,15 +86,7 @@ export function CategoryForm({ initialData, parentOptions }: CategoryFormProps) 
 
   const form = useForm<CreateCategoryInput>({
     resolver: zodResolver(createCategorySchema),
-    defaultValues: {
-      nameEn: '',
-      nameAr: '',
-      slug: '',
-      descriptionEn: '',
-      descriptionAr: '',
-      parentId: null,
-      status: 'active',
-    },
+    defaultValues: getDefaultValues(initialData),
   });
 
   const { isDirty } = form.formState;
@@ -79,17 +95,9 @@ export function CategoryForm({ initialData, parentOptions }: CategoryFormProps) 
 
   useEffect(() => {
     if (initialData) {
-      form.reset({
-        nameEn: initialData.nameEn,
-        nameAr: initialData.nameAr ?? '',
-        slug: initialData.slug,
-        descriptionEn: initialData.descriptionEn ?? '',
-        descriptionAr: initialData.descriptionAr ?? '',
-        parentId: initialData.parentId ?? null,
-        status: initialData.status,
-      });
+      form.reset(getDefaultValues(initialData));
     }
-  }, [initialData, form]);
+  }, [initialData, form.reset]);
 
   const watchedNameEn = form.watch('nameEn');
   useEffect(() => {
@@ -99,7 +107,7 @@ export function CategoryForm({ initialData, parentOptions }: CategoryFormProps) 
         form.setValue('slug', generateSlug(watchedNameEn), { shouldValidate: false });
       }
     }
-  }, [watchedNameEn, isEditMode, form]);
+  }, [watchedNameEn, isEditMode, form.setValue, form.getValues]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -152,7 +160,23 @@ export function CategoryForm({ initialData, parentOptions }: CategoryFormProps) 
     router.push('/categories');
   }
 
-  const availableParents = parentOptions.filter((c) => c.id !== initialData?.id);
+  const availableParents = useMemo(() => {
+    const base = parentOptions.filter((c) => c.id !== initialData?.id);
+
+    if (!initialData?.parentId) return base;
+
+    if (base.some((c) => c.id === initialData.parentId)) return base;
+
+    return [
+      {
+        id: initialData.parentId,
+        nameEn: initialData.parentNameEn ?? `#${initialData.parentId}`,
+        nameAr: initialData.parentNameAr,
+        depth: 0,
+      },
+      ...base,
+    ];
+  }, [parentOptions, initialData]);
 
   return (
     <>

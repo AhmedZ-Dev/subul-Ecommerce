@@ -1,7 +1,7 @@
 // features/category/utils/index.ts
 // Pure functions for category domain logic — no React, no API calls
 
-import type { CategoryListItem, CategoryTreeNode } from '../types';
+import type { CategoryDto, CategoryListItem, CategoryTreeNode } from '../types';
 
 // ─── Tree building ────────────────────────────────────────────────────────────
 
@@ -109,6 +109,20 @@ export function getCategoryName(
   locale: 'en' | 'ar' = 'en',
 ): string {
   return locale === 'ar' ? (category.nameAr ?? category.nameEn) : category.nameEn;
+}
+
+export function getParentDisplayName(
+  category: Pick<CategoryDto, 'parentId' | 'parentNameEn' | 'parentNameAr'>,
+  parent?: Pick<CategoryDto, 'nameEn' | 'nameAr'> | null,
+): string | null {
+  if (!category.parentId) return null;
+  return (
+    category.parentNameAr ??
+    category.parentNameEn ??
+    parent?.nameAr ??
+    parent?.nameEn ??
+    null
+  );
 }
 
 /**

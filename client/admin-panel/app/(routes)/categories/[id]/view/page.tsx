@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { PageContainer } from '@/components/layout/page-container';
-import { CategoryView, getCategoryById } from '@/features/category';
+import { CategoryView, getCachedCategoryById } from '@/features/category';
 import { messages } from '@/lib/messages.ar';
 
 export async function generateMetadata({
@@ -15,7 +15,7 @@ export async function generateMetadata({
     return { title: messages.category.view.title };
   }
 
-  const category = await getCategoryById(categoryId).catch(() => null);
+  const category = await getCachedCategoryById(categoryId).catch(() => null);
 
   return {
     title: category
@@ -36,7 +36,7 @@ export default async function ViewCategoryPage({ params }: ViewCategoryPageProps
     notFound();
   }
 
-  const category = await getCategoryById(categoryId).catch(() => null);
+  const category = await getCachedCategoryById(categoryId).catch(() => null);
 
   if (!category) {
     notFound();

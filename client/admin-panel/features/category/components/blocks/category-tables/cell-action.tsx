@@ -21,11 +21,11 @@ import {
 } from '@/components/ui/tooltip';
 import { messages } from '@/lib/messages.ar';
 import { cn } from '@/lib/utils';
-import type { CategoryListItem } from '../../types';
+import type { CategoryListItem } from '../../../types';
 import {
   useChangeCategoryStatus,
   useDeleteCategory,
-} from '../../hooks/useCategoryMutations';
+} from '../../../hooks/useCategoryMutations';
 
 interface CategoryCellActionProps {
   category: CategoryListItem;
@@ -153,20 +153,21 @@ export function CategoryCellAction({ category }: CategoryCellActionProps) {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogTitle>{messages.category.view.deleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              هل أنت متأكد من حذف &quot;{displayName}&quot;؟ قد يؤثر هذا على الفئات
-              الفرعية.
+              {messages.category.view.deleteDescription(displayName)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>إلغاء</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>
+              {messages.category.form.cancel}
+            </AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isPending}
             >
-              حذف
+              {messages.common.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

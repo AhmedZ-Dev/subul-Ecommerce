@@ -1,8 +1,13 @@
 import { notFound } from 'next/navigation';
 import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/layout/page-header';
-import { CategoryForm, getCategoryById, getCategories } from '@/features/category';
-import { buildCategoryTree, flattenTree } from '@/features/category/utils';
+import {
+  CategoryForm,
+  buildCategoryTree,
+  flattenTree,
+  getCategories,
+  getCategoryById,
+} from '@/features/category';
 import { messages } from '@/lib/messages.ar';
 
 export const metadata = {

@@ -16,11 +16,10 @@ import {
 } from '@/components/ui/table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { DataTablePagination } from '@/components/data-table-pagination';
 import { messages } from '@/lib/messages.ar';
 import { CategoryEmptyState } from '../category-empty-state';
-import type { CategoryListItem } from '../../types';
+import type { CategoryListItem } from '../../../types';
 
 const m = messages.category.listing;
 
@@ -31,9 +30,11 @@ interface CategoryTableProps {
   columns: ColumnDef<CategoryListItem>[];
   isLoading?: boolean;
   page: number;
+  pageSize: number;
   totalPages: number;
   total: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
   embedded?: boolean;
   showEmptyState?: boolean;
 }
@@ -56,56 +57,6 @@ function SkeletonRows({ columnCount }: { columnCount: number }) {
   );
 }
 
-// ─── Pagination bar ───────────────────────────────────────────────────────────
-
-function PaginationBar({
-  page,
-  totalPages,
-  total,
-  isLoading,
-  onPageChange,
-}: {
-  page: number;
-  totalPages: number;
-  total: number;
-  isLoading: boolean;
-  onPageChange: (page: number) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between border-t pt-3">
-      <div className="text-muted-foreground text-sm">
-        {isLoading ? (
-          <Skeleton className="inline-block h-4 w-28" />
-        ) : (
-          <>
-            {m.paginationTotal(total)} — {m.paginationPage(page, totalPages)}
-          </>
-        )}
-      </div>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="outline"
-          size="icon-sm"
-          onClick={() => onPageChange(page - 1)}
-          disabled={page <= 1 || isLoading}
-          aria-label="الصفحة السابقة"
-        >
-          <ChevronRight className="size-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon-sm"
-          onClick={() => onPageChange(page + 1)}
-          disabled={page >= totalPages || isLoading}
-          aria-label="الصفحة التالية"
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function CategoryTable({
@@ -113,9 +64,11 @@ export function CategoryTable({
   columns,
   isLoading = false,
   page,
+  pageSize,
   totalPages,
   total,
   onPageChange,
+  onPageSizeChange,
   embedded = false,
   showEmptyState = false,
 }: CategoryTableProps) {
@@ -169,7 +122,7 @@ export function CategoryTable({
                       colSpan={columns.length}
                       className="text-muted-foreground h-24 text-center"
                     >
-                      لا توجد فئات.
+                      {messages.common.noResults}
                     </TableCell>
                   </TableRow>
                 )}
@@ -180,13 +133,15 @@ export function CategoryTable({
         </div>
       </div>
 
-      {/* ── Pagination — always visible below the scroll area ────────────── */}
-      <PaginationBar
+      <DataTablePagination
         page={page}
+        pageSize={pageSize}
         totalPages={totalPages}
         total={total}
         isLoading={isLoading}
         onPageChange={onPageChange}
+        onPageSizeChange={onPageSizeChange}
+        totalLabel={m.paginationTotal}
       />
     </div>
   );

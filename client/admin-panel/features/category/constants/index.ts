@@ -22,20 +22,18 @@ export const CATEGORY_MAX_PAGE_SIZE = 100;
 
 // ─── Status display config ────────────────────────────────────────────────────
 
-export const CATEGORY_STATUS_OPTIONS: Array<{ value: CategoryStatus; label: string }> = [
-  { value: 'active', label: 'نشط' },
-  { value: 'inactive', label: 'غير نشط' },
-];
-
 export const CATEGORY_STATUS_TONES: Record<CategoryStatus, StatusTone> = {
   active: 'success',
   inactive: 'neutral',
 };
 
 // Tailwind classes keyed by status — used on Badge in table and tree views
+// Dark variants match StatusIndicator badge tones for consistent theming
 export const CATEGORY_STATUS_COLORS: Record<CategoryStatus, string> = {
-  active: 'bg-green-50 text-green-700 border-green-200',
-  inactive: 'bg-gray-50 text-gray-700 border-gray-200',
+  active:
+    'bg-green-50 text-green-700 border-green-200 dark:bg-green-950/40 dark:text-green-400 dark:border-green-900',
+  inactive:
+    'bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/40 dark:text-gray-400 dark:border-gray-800',
 };
 
 export const CATEGORY_STATUS_DOT_COLORS: Record<CategoryStatus, string> = {

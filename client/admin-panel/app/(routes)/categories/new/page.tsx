@@ -1,7 +1,11 @@
 import { PageContainer } from '@/components/layout/page-container';
 import { PageHeader } from '@/components/layout/page-header';
-import { CategoryForm, getCategories } from '@/features/category';
-import { buildCategoryTree, flattenTree } from '@/features/category/utils';
+import {
+  CategoryForm,
+  buildCategoryTree,
+  flattenTree,
+  getCategories,
+} from '@/features/category';
 import { messages } from '@/lib/messages.ar';
 
 export const metadata = {

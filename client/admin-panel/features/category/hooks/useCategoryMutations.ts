@@ -17,6 +17,50 @@ import { categoryKeys } from './useCategory';
 import type { CategoryDto, CategoryListItem } from '../types';
 import type { PaginatedResponse } from '@/types/api';
 
+function withParentNames(
+  dto: CategoryDto,
+  queryClient: ReturnType<typeof useQueryClient>,
+): CategoryDto {
+  if (!dto.parentId || dto.parentNameEn || dto.parentNameAr) return dto;
+
+  const previous = queryClient.getQueryData<CategoryDto>(categoryKeys.detail(dto.id));
+  if (
+    previous?.parentId === dto.parentId &&
+    (previous.parentNameEn || previous.parentNameAr)
+  ) {
+    return {
+      ...dto,
+      parentNameEn: previous.parentNameEn,
+      parentNameAr: previous.parentNameAr,
+    };
+  }
+
+  const parent = queryClient.getQueryData<CategoryDto>(categoryKeys.detail(dto.parentId));
+  if (parent) {
+    return {
+      ...dto,
+      parentNameEn: parent.nameEn,
+      parentNameAr: parent.nameAr,
+    };
+  }
+
+  const listQueries = queryClient.getQueriesData<PaginatedResponse<CategoryListItem>>({
+    queryKey: categoryKeys.lists(),
+  });
+  for (const [, data] of listQueries) {
+    const item = data?.items.find((i) => i.id === dto.parentId);
+    if (item) {
+      return {
+        ...dto,
+        parentNameEn: item.nameEn,
+        parentNameAr: item.nameAr,
+      };
+    }
+  }
+
+  return dto;
+}
+
 // ─── useCreateCategory ────────────────────────────────────────────────────────
 
 export function useCreateCategory() {
@@ -27,8 +71,8 @@ export function useCreateCategory() {
     onSuccess: (newCategory) => {
       // Invalidate all list queries so the listing page re-fetches
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
-      // Seed the detail cache immediately — avoids a network round-trip on navigation
-      queryClient.setQueryData(categoryKeys.detail(newCategory.id), newCategory);
+      const enriched = withParentNames(newCategory, queryClient);
+      queryClient.setQueryData(categoryKeys.detail(newCategory.id), enriched);
       toast.success(messages.category.createSuccess);
     },
     onError: (error: Error) => {
@@ -47,7 +91,8 @@ export function useUpdateCategory() {
       updateCategory(id, payload),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: categoryKeys.lists() });
-      queryClient.setQueryData(categoryKeys.detail(updated.id), updated);
+      const enriched = withParentNames(updated, queryClient);
+      queryClient.setQueryData(categoryKeys.detail(updated.id), enriched);
       toast.success(messages.category.updateSuccess);
     },
     onError: (error: Error) => {
@@ -66,16 +111,27 @@ export function useDeleteCategory() {
   return useMutation({
     mutationFn: (id: number) => deleteCategory(id),
     onMutate: async (id) => {
-      // Cancel any in-flight list queries to prevent overwrites
       await queryClient.cancelQueries({ queryKey: categoryKeys.lists() });
-      const previous = queryClient.getQueryData(categoryKeys.lists());
-      return { previous, id };
+
+      const previousLists = queryClient.getQueriesData<PaginatedResponse<CategoryListItem>>({
+        queryKey: categoryKeys.lists(),
+      });
+
+      previousLists.forEach(([key, data]) => {
+        if (!data) return;
+        queryClient.setQueryData(key, {
+          ...data,
+          items: data.items.filter((item) => item.id !== id),
+          total: Math.max(0, data.total - 1),
+        });
+      });
+
+      return { previousLists, id };
     },
     onError: (_err, _id, context) => {
-      // Rollback on failure
-      if (context?.previous) {
-        queryClient.setQueryData(categoryKeys.lists(), context.previous);
-      }
+      context?.previousLists.forEach(([key, data]) => {
+        queryClient.setQueryData(key, data);
+      });
       toast.error(messages.category.deleteError);
     },
     onSuccess: (_data, id) => {

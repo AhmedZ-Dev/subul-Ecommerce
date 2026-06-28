@@ -138,6 +138,8 @@ export const messages = {
     deleteSuccess: "تم حذف الفئة بنجاح",
     deleteError: "فشل حذف الفئة",
     status: {
+      active: "نشط",
+      inactive: "غير نشط",
       changeSuccess: "تم تحديث حالة الفئة بنجاح",
       changeError: "فشل تحديث حالة الفئة",
       toggleActive: "تفعيل الفئة",
@@ -159,6 +161,12 @@ export const messages = {
         `${total} ${total === 1 ? "فئة" : "فئة"} في الإجمالي`,
       paginationPage: (page: number, totalPages: number) =>
         `صفحة ${page} من ${totalPages || 1}`,
+      treeExpand: "توسيع",
+      treeCollapse: "طي",
+      openActions: "فتح الإجراءات",
+      treeName: "الاسم",
+      treeSlug: "الرابط المختصر",
+      treeStatus: "الحالة",
     },
     form: {
       sections: {
@@ -308,33 +316,4 @@ export function formatPercent(value: number) {
 export function formatDate(value: string | Date, options?: Intl.DateTimeFormatOptions) {
   const date = typeof value === "string" ? new Date(value) : value
   return new Intl.DateTimeFormat(LOCALE, options).format(date)
-}
-
-const statusLabels: Record<string, string> = {
-  Done: messages.table.statusDone,
-  "In Process": messages.table.statusInProgress,
-  "In Progress": messages.table.statusInProgress,
-  "Not Started": messages.table.statusNotStarted,
-}
-
-const typeLabels: Record<string, string> = {
-  "Table of Contents": messages.table.types.tableOfContents,
-  "Executive Summary": messages.table.types.executiveSummary,
-  "Technical Approach": messages.table.types.technicalApproach,
-  Design: messages.table.types.design,
-  Capabilities: messages.table.types.capabilities,
-  "Focus Documents": messages.table.types.focusDocuments,
-  Narrative: messages.table.types.narrative,
-  "Cover Page": messages.table.types.coverPage,
-  "Cover page": messages.table.types.coverPage,
-  "Table of contents": messages.table.types.tableOfContents,
-  "Executive summary": messages.table.types.executiveSummary,
-}
-
-export function translateStatus(status: string) {
-  return statusLabels[status] ?? status
-}
-
-export function translateType(type: string) {
-  return typeLabels[type] ?? type
 }

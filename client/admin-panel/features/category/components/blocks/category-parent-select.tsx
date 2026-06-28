@@ -48,6 +48,9 @@ export function CategoryParentSelect({
 }: CategoryParentSelectProps) {
   const [filter, setFilter] = useState('');
   const showSearch = options.length >= PARENT_SEARCH_THRESHOLD;
+  const normalizedValue =
+    value !== null && value !== undefined ? Number(value) : null;
+  const selected = options.find((o) => o.id === normalizedValue);
 
   const filtered = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -62,11 +65,17 @@ export function CategoryParentSelect({
   return (
     <Select
       onValueChange={(v) => onChange(v === 'none' ? null : parseInt(v, 10))}
-      value={value !== null && value !== undefined ? String(value) : 'none'}
+      value={normalizedValue !== null ? String(normalizedValue) : 'none'}
       disabled={disabled}
     >
       <SelectTrigger id={id}>
-        <SelectValue placeholder={messages.category.form.parentPlaceholder} />
+        <SelectValue placeholder={messages.category.form.parentPlaceholder}>
+          {normalizedValue === null
+            ? messages.category.form.parentNone
+            : selected
+              ? formatParentLabel(selected)
+              : undefined}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {showSearch && (

@@ -4,15 +4,18 @@ import { NuqsAdapter } from "nuqs/adapters/next/app"
 
 import "./globals.css"
 import { AppProviders } from "@/components/app-providers"
+import { messages } from "@/lib/messages.ar"
 import { cn } from "@/lib/utils"
+
+const companyName = messages.common.companyName
 
 export const metadata: Metadata = {
   title: {
-    default: "شركة أكمي — لوحة التحكم",
-    template: "%s | شركة أكمي",
+    default: `${companyName} — لوحة التحكم`,
+    template: `%s | ${companyName}`,
   },
-  description: "لوحة تحكم الإدارة لشركة أكمي",
-  applicationName: "شركة أكمي",
+  description: `لوحة تحكم الإدارة لـ${companyName}`,
+  applicationName: companyName,
 }
 
 const fontSans = localFont({

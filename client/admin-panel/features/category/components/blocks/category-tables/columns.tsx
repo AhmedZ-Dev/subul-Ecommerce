@@ -4,7 +4,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { Badge } from '@/components/ui/badge';
 import { EntityCell } from '@/components/ui/entity-cell';
 import { FolderOpen, FolderTree } from 'lucide-react';
-import type { CategoryListItem } from '../../types';
+import type { CategoryListItem } from '../../../types';
 import { CategoryCellAction } from './cell-action';
 import { CategoryStatusToggle } from '../category-status-toggle';
 

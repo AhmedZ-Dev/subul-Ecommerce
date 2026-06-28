@@ -3,15 +3,9 @@
 // External code (pages, other features) must import from here, never from internal paths.
 
 // ── Components ────────────────────────────────────────────────────────────────
-export { CategoryForm } from './components/category-form';
-export { CategoryTable } from './components/category-tables';
-export { categoryColumns } from './components/category-tables/columns';
-export { CategoryCellAction } from './components/category-tables/cell-action';
-export { CategoryTree } from './components/category-tree';
-export { CategoryListingPage } from './components/category-listing-page';
-export { CategoryView } from './components/category-view';
-export { CategoryStatusBadge } from './components/category-status-badge';
-export { CategoryStatusToggle } from './components/category-status-toggle';
+export { CategoryListingPage } from './components/pages/category-listing-page';
+export { CategoryForm } from './components/pages/category-form';
+export { CategoryView } from './components/pages/category-view';
 
 // ── Hooks ─────────────────────────────────────────────────────────────────────
 export {
@@ -45,6 +39,13 @@ export type {
 
 // ── API (for RSC server-side calls) ──────────────────────────────────────────
 export { getCategories, getCategoryById } from './api/category.api';
+export { getCachedCategoryById } from './api/category.cached';
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
 export { buildCategoryTree, flattenTree, getCategoryName, generateSlug } from './utils';
+
+// ── URL search params (nuqs) ────────────────────────────────────────────────────
+export {
+  categoryListingParsers,
+  categoryListingSearchParamsCache,
+} from './search-params';

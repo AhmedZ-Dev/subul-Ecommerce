@@ -95,9 +95,11 @@ import {
 import { GripVerticalIcon, CircleCheckIcon, LoaderIcon, EllipsisVerticalIcon, Columns3Icon, ChevronDownIcon, PlusIcon, ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon, TrendingUpIcon } from "lucide-react"
 import {
   messages,
+} from "@/lib/messages.ar"
+import {
   translateStatus,
   translateType,
-} from "@/lib/messages.ar"
+} from "@/components/data-table.messages"
 
 export const schema = z.object({
   id: z.number(),

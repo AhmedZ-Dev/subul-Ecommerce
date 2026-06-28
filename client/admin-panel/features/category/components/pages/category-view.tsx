@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -38,9 +38,11 @@ import {
 } from '@/components/ui/tooltip';
 import { formatDate, messages } from '@/lib/messages.ar';
 import { cn } from '@/lib/utils';
-import type { CategoryDto, CategoryStatus } from '../types';
-import { useDeleteCategory } from '../hooks/useCategoryMutations';
-import { CategoryStatusToggle } from './category-status-toggle';
+import type { CategoryDto } from '../../types';
+import { useCategory } from '../../hooks/useCategory';
+import { useDeleteCategory } from '../../hooks/useCategoryMutations';
+import { getParentDisplayName } from '../../utils';
+import { CategoryStatusToggle } from '../blocks/category-status-toggle';
 
 function DetailField({
   label,
@@ -102,25 +104,47 @@ interface CategoryViewProps {
   category: CategoryDto;
 }
 
+function ParentCategoryValue({ category }: { category: CategoryDto }) {
+  const m = messages.category.view;
+  const parentId = category.parentId;
+  const hasCachedParentNames = !!(category.parentNameAr || category.parentNameEn);
+  const { data: fetchedParent } = useCategory(parentId ?? 0, {
+    enabled: parentId !== null && !hasCachedParentNames,
+  });
+
+  if (!parentId) {
+    return <span className="text-muted-foreground">{m.rootCategory}</span>;
+  }
+
+  const displayName = getParentDisplayName(category, fetchedParent);
+  const dir =
+    category.parentNameAr || fetchedParent?.nameAr ? 'rtl' : 'ltr';
+
+  return (
+    <Link
+      href={`/categories/${parentId}/view`}
+      className="text-primary font-medium hover:underline"
+      dir={dir}
+    >
+      {displayName ?? `#${parentId}`}
+    </Link>
+  );
+}
+
 export function CategoryView({ category }: CategoryViewProps) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [status, setStatus] = useState<CategoryStatus>(category.status);
-  const [updatedAt, setUpdatedAt] = useState(category.updatedAt);
+  const { data: liveCategory } = useCategory(category.id, { initialData: category });
+  const current = liveCategory ?? category;
   const { mutate: deleteCategory, isPending } = useDeleteCategory();
 
   const m = messages.category.view;
   const f = messages.category.form;
-  const displayName = category.nameAr ?? category.nameEn;
-  const isRoot = category.parentId === null;
-
-  useEffect(() => {
-    setStatus(category.status);
-    setUpdatedAt(category.updatedAt);
-  }, [category.status, category.updatedAt]);
+  const displayName = current.nameAr ?? current.nameEn;
+  const isRoot = current.parentId === null;
 
   function handleConfirmDelete() {
-    deleteCategory(category.id, {
+    deleteCategory(current.id, {
       onSuccess: () => router.push('/categories'),
       onSettled: () => setDeleteOpen(false),
     });
@@ -128,7 +152,7 @@ export function CategoryView({ category }: CategoryViewProps) {
 
   async function handleCopySlug() {
     try {
-      await navigator.clipboard.writeText(category.slug);
+      await navigator.clipboard.writeText(current.slug);
       toast.success(m.slugCopied);
     } catch {
       toast.error(messages.common.error);
@@ -165,27 +189,23 @@ export function CategoryView({ category }: CategoryViewProps) {
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <h1 className="text-2xl font-bold tracking-tight">
-                      {category.nameAr ?? category.nameEn}
+                      {current.nameAr ?? current.nameEn}
                     </h1>
                     <CategoryStatusToggle
-                      categoryId={category.id}
-                      status={status}
-                      onStatusChange={(result) => {
-                        setStatus(result.status);
-                        setUpdatedAt(result.updatedAt);
-                      }}
+                      categoryId={current.id}
+                      status={current.status}
                     />
                   </div>
 
-                  {category.nameAr && (
+                  {current.nameAr && (
                     <p className="text-muted-foreground text-sm" dir="ltr">
-                      {category.nameEn}
+                      {current.nameEn}
                     </p>
                   )}
 
                   <div className="flex flex-wrap items-center gap-2 pt-1">
                     <code className="bg-muted text-muted-foreground rounded-md px-2 py-1 font-mono text-xs">
-                      {category.slug}
+                      {current.slug}
                     </code>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -204,7 +224,7 @@ export function CategoryView({ category }: CategoryViewProps) {
                       </TooltipContent>
                     </Tooltip>
                     <span className="text-muted-foreground text-xs">
-                      {m.categoryId}: {category.id}
+                      {m.categoryId}: {current.id}
                     </span>
                   </div>
                 </div>
@@ -212,7 +232,7 @@ export function CategoryView({ category }: CategoryViewProps) {
 
               <div className="flex shrink-0 flex-wrap items-center gap-2">
                 <Button asChild>
-                  <Link href={`/categories/${category.id}/edit`}>
+                  <Link href={`/categories/${current.id}/edit`}>
                     <Pencil />
                     {messages.common.edit}
                   </Link>
@@ -234,24 +254,12 @@ export function CategoryView({ category }: CategoryViewProps) {
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               <DetailField
                 label={f.parent}
-                value={
-                  category.parentId ? (
-                    <Link
-                      href={`/categories/${category.parentId}/view`}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      {category.parentNameAr ?? category.parentNameEn}
-                    </Link>
-                  ) : (
-                    <span className="text-muted-foreground">{m.rootCategory}</span>
-                  )
-                }
-                dir={category.parentNameAr ? 'rtl' : 'ltr'}
+                value={<ParentCategoryValue category={current} />}
               />
-              <DetailField label={m.sortOrder} value={category.sortOrder} />
+              <DetailField label={m.sortOrder} value={current.sortOrder} />
               <DetailField
                 label={m.createdAt}
-                value={formatDate(category.createdAt, {
+                value={formatDate(current.createdAt, {
                   dateStyle: 'medium',
                   timeStyle: 'short',
                 })}
@@ -259,8 +267,8 @@ export function CategoryView({ category }: CategoryViewProps) {
               <DetailField
                 label={m.updatedAt}
                 value={
-                  updatedAt
-                    ? formatDate(updatedAt, {
+                  current.updatedAt
+                    ? formatDate(current.updatedAt, {
                         dateStyle: 'medium',
                         timeStyle: 'short',
                       })
@@ -279,17 +287,17 @@ export function CategoryView({ category }: CategoryViewProps) {
             </CardHeader>
             <CardContent>
               <dl className="grid gap-3">
-                <DetailField label={f.nameEn} value={category.nameEn} dir="ltr" />
+                <DetailField label={f.nameEn} value={current.nameEn} dir="ltr" />
                 <DetailField
                   label={f.nameAr}
-                  value={category.nameAr ?? m.empty}
+                  value={current.nameAr ?? m.empty}
                   dir="rtl"
                 />
                 <DetailField
                   label={f.slug}
                   value={
                     <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-xs">
-                      {f.slugPreview(category.slug)}
+                      {f.slugPreview(current.slug)}
                     </code>
                   }
                   dir="ltr"
@@ -309,32 +317,16 @@ export function CategoryView({ category }: CategoryViewProps) {
                   label={f.status}
                   value={
                     <CategoryStatusToggle
-                      categoryId={category.id}
-                      status={status}
-                      onStatusChange={(result) => {
-                        setStatus(result.status);
-                        setUpdatedAt(result.updatedAt);
-                      }}
+                      categoryId={current.id}
+                      status={current.status}
                     />
                   }
                 />
                 <DetailField
                   label={f.parent}
-                  value={
-                    category.parentId ? (
-                      <Link
-                        href={`/categories/${category.parentId}/view`}
-                        className="text-primary font-medium hover:underline"
-                      >
-                        {category.parentNameAr ?? category.parentNameEn}
-                      </Link>
-                    ) : (
-                      m.rootCategory
-                    )
-                  }
-                  dir={category.parentNameAr ? 'rtl' : 'ltr'}
+                  value={<ParentCategoryValue category={current} />}
                 />
-                <DetailField label={m.sortOrder} value={category.sortOrder} />
+                <DetailField label={m.sortOrder} value={current.sortOrder} />
               </dl>
             </CardContent>
           </Card>
@@ -348,12 +340,12 @@ export function CategoryView({ category }: CategoryViewProps) {
               <div className="grid gap-6 lg:grid-cols-2">
                 <DescriptionBlock
                   label={f.descriptionEn}
-                  value={category.descriptionEn}
+                  value={current.descriptionEn}
                   dir="ltr"
                 />
                 <DescriptionBlock
                   label={f.descriptionAr}
-                  value={category.descriptionAr}
+                  value={current.descriptionAr}
                   dir="rtl"
                 />
               </div>

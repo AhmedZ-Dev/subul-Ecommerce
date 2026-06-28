@@ -1,105 +1,88 @@
 'use client';
-// features/category/components/category-listing-page.tsx
+// features/category/components/pages/category-listing-page.tsx
 
-import { useState, useTransition, useCallback, useEffect } from 'react';
+import { useEffect, useTransition } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useQueryStates } from 'nuqs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, List, Network, X } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { ListPageCard } from '@/components/layout/list-page-card';
-import { useDebounce } from '@/hooks/use-debounce';
 import { messages } from '@/lib/messages.ar';
 import { cn } from '@/lib/utils';
-import { CategoryTable } from './category-tables';
-import { categoryColumns } from './category-tables/columns';
-import { CategoryTree } from './category-tree';
-import { useCategories } from '../hooks/useCategory';
-import { useCategoryTree } from '../hooks/useCategory';
-import { CATEGORY_DEFAULT_PAGE_SIZE } from '../constants';
-import type { CategoryQueryParams } from '../types';
+import { CategoryTable } from '../blocks/category-tables';
+import { categoryColumns } from '../blocks/category-tables/columns';
+import { CategoryTree } from '../blocks/category-tree';
+import { useCategories } from '../../hooks/useCategory';
+import { useCategoryTree } from '../../hooks/useCategory';
+import { categoryListingParsers, normalizeCategoryPageSize } from '../../search-params';
+import type { CategoryQueryParams } from '../../types';
 
 type ViewMode = 'table' | 'tree';
 
 const m = messages.category.listing;
 const VIEW_STORAGE_KEY = 'categories-view-mode';
 
-function parseViewMode(value: string | null): ViewMode {
-  return value === 'tree' ? 'tree' : 'table';
-}
-
 export function CategoryListingPage() {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [_isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
-  const page = parseInt(searchParams.get('page') ?? '1', 10);
-  const search = searchParams.get('search') ?? '';
-  const viewFromUrl = searchParams.get('view');
-  const [localSearch, setLocalSearch] = useState(search);
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [{ page, limit, search, view }, setParams] = useQueryStates(categoryListingParsers, {
+    history: 'replace',
+    shallow: true,
+    startTransition,
+  });
 
-  const debouncedSearch = useDebounce(localSearch, 300);
+  const viewMode: ViewMode = view;
 
   useEffect(() => {
-    if (viewFromUrl) {
-      setViewMode(parseViewMode(viewFromUrl));
-      return;
-    }
+    const hasViewParam = new URLSearchParams(window.location.search).has('view');
+    if (hasViewParam) return;
+
     const stored = localStorage.getItem(VIEW_STORAGE_KEY);
-    if (stored === 'tree' || stored === 'table') {
-      setViewMode(stored);
+    if (stored === 'tree') {
+      void setParams({ view: 'tree' });
     }
-  }, [viewFromUrl]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bootstrap localStorage preference once on mount
+  }, []);
 
-  const updateParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const params = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null || value === '') {
-          params.delete(key);
-        } else {
-          params.set(key, value);
-        }
-      }
-      startTransition(() => {
-        router.replace(`${pathname}?${params.toString()}`);
-      });
-    },
-    [searchParams, pathname, router],
-  );
-
-  useEffect(() => {
-    setLocalSearch(search);
-  }, [search]);
-
-  useEffect(() => {
-    if (debouncedSearch === search) return;
-    updateParams({ search: debouncedSearch || null, page: null });
-  }, [debouncedSearch, search, updateParams]);
+  function handleSearchChange(value: string) {
+    void setParams(
+      { search: value || null, page: null },
+      { throttleMs: 300 },
+    );
+  }
 
   function handleViewChange(mode: ViewMode) {
-    setViewMode(mode);
     localStorage.setItem(VIEW_STORAGE_KEY, mode);
-    updateParams({ view: mode === 'table' ? null : mode });
+    void setParams({ view: mode === 'tree' ? 'tree' : null });
   }
 
   function handlePageChange(newPage: number) {
-    updateParams({ page: String(newPage) });
+    void setParams({ page: newPage });
   }
+
+  function handlePageSizeChange(newLimit: number) {
+    void setParams({ limit: newLimit, page: null });
+  }
+
+  const pageSize = normalizeCategoryPageSize(limit);
 
   const queryParams: CategoryQueryParams = {
     page,
-    limit: CATEGORY_DEFAULT_PAGE_SIZE,
+    limit: pageSize,
     ...(search && { search }),
     sortBy: 'nameEn',
     sortOrder: 'asc',
   };
 
-  const { data: listData, isLoading: isListLoading } = useCategories(queryParams);
-  const { data: treeData, isLoading: isTreeLoading } = useCategoryTree();
+  const { data: listData, isLoading: isListLoading } = useCategories(
+    queryParams,
+    viewMode === 'table',
+  );
+  const { data: treeData, isLoading: isTreeLoading } = useCategoryTree(
+    viewMode === 'tree',
+  );
 
   const showEmpty =
     viewMode === 'table' &&
@@ -129,18 +112,18 @@ export function CategoryListingPage() {
             <Input
               id="categories-search-input"
               placeholder={m.searchPlaceholder}
-              value={localSearch}
-              onChange={(e) => setLocalSearch(e.target.value)}
-              className={cn('ps-9', localSearch && 'pe-9')}
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className={cn('ps-9', search && 'pe-9')}
             />
-            {localSearch && (
+            {search && (
               <Button
                 id="categories-clear-search-btn"
                 type="button"
                 variant="ghost"
                 size="icon-xs"
                 className="absolute top-1/2 end-1 -translate-y-1/2"
-                onClick={() => setLocalSearch('')}
+                onClick={() => void setParams({ search: null, page: null })}
                 aria-label={m.clearSearch}
               >
                 <X className="size-3.5" />
@@ -185,9 +168,11 @@ export function CategoryListingPage() {
               columns={categoryColumns}
               isLoading={isListLoading}
               page={page}
+              pageSize={pageSize}
               totalPages={listData?.totalPages ?? 1}
               total={listData?.total ?? 0}
               onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
               embedded
               showEmptyState={showEmpty}
             />

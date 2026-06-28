@@ -62,15 +62,17 @@ admin-panel/
 │   └── category/               # ← TEMPLATE for new features (see below)
 │       ├── api/                # Axios calls
 │       ├── hooks/              # useQuery + useMutation hooks
-│       ├── components/         # Page, table, form
+│       ├── components/
+│       │   ├── pages/          # Route-level screens (exported publicly)
+│       │   └── blocks/         # Internal UI blocks (not exported)
 │       ├── schemas/            # Zod validation schemas
+│       ├── search-params.ts    # nuqs parsers + server cache (listing URL state)
 │       ├── types/              # TypeScript interfaces
 │       └── constants/          # Shared constants (e.g. query keys)
 │
 ├── lib/
 │   ├── api-client.ts           # Axios instance (reads NEXT_PUBLIC_API_URL)
 │   ├── messages.ar.ts          # All Arabic UI strings + i18n helpers
-│   ├── search-params.ts        # Shared nuqs pagination/search params
 │   └── utils.ts                # cn() helper
 │
 ├── providers/
@@ -92,8 +94,45 @@ admin-panel/
 3. Update `features/{entity}/api/{entity}.api.ts` with the correct endpoints
 4. Update `features/{entity}/types/index.ts` with your entity shape
 5. Update `features/{entity}/schemas/{entity}.schema.ts` with Zod validation
-6. Add route pages under `app/(routes)/{entities}/`
-7. Add the new route to `config/navigation.ts` in `navMain` — it automatically appears in the sidebar and KBar
+6. Update `features/{entity}/search-params.ts` with listing URL parsers (page, search, filters)
+7. Add route pages under `app/(routes)/{entities}/`
+8. Add the new route to `config/navigation.ts` in `navMain` — it automatically appears in the sidebar and KBar
+9. Put route-level screens in `components/pages/` and reusable UI in `components/blocks/` — only export `pages/` from `index.ts`
+
+---
+
+## URL state (nuqs)
+
+List pages sync filters and pagination to the URL via [nuqs](https://nuqs.dev).
+
+**Setup (already done):**
+
+- `NuqsAdapter` wraps the app in `app/layout.tsx`
+- Each feature defines parsers in `features/{entity}/search-params.ts`
+
+**Category example** (`features/category/search-params.ts`):
+
+| Query key | Parser | Default | Notes |
+|---|---|---|---|
+| `page` | `parseAsInteger` | `1` | Pagination |
+| `search` | `parseAsString` | `""` | Throttled 300ms in the listing component |
+| `view` | `parseAsStringEnum(['table', 'tree'])` | `table` | Default omitted from URL (`?view=tree` only for tree) |
+
+**Client usage** (in listing components):
+
+```tsx
+import { useQueryStates } from 'nuqs'
+import { categoryListingParsers } from '../search-params'
+
+const [{ page, search, view }, setParams] = useQueryStates(categoryListingParsers, {
+  history: 'replace',
+  shallow: true,
+})
+```
+
+**Server usage (optional):** export `categoryListingSearchParamsCache` from the feature barrel and call `.parse(searchParams)` in a Server Component when you need URL-aware RSC prefetch.
+
+When adding a new list feature, copy `search-params.ts` and adjust keys for entity-specific filters (`status`, `parentId`, etc.).
 
 ---
 
