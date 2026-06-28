@@ -188,6 +188,28 @@ public class CategoryIntegrationTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    [Fact]
+    public async Task PUT_Categories_Status_Deactivate_Returns200()
+    {
+        var created = await CreateCategoryAsync($"Status Integration {Guid.NewGuid():N}");
+        var id = created.GetProperty("data").GetProperty("id").GetInt64();
+
+        var response = await _client.PutAsJsonAsync($"/api/categories/{id}/status", new { isActive = false });
+        var body = await ParseBody(response);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(body.GetProperty("success").GetBoolean());
+        Assert.False(body.GetProperty("data").GetProperty("isActive").GetBoolean());
+    }
+
+    [Fact]
+    public async Task PUT_Categories_Status_NonExistentId_Returns404()
+    {
+        var response = await _client.PutAsJsonAsync("/api/categories/999999999/status", new { isActive = false });
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
     private async Task<JsonElement> CreateCategoryAsync(string nameEn)
     {
         var payload = new { nameEn, nameAr = (string?)null, parentId = (long?)null };
