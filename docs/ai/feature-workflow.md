@@ -1,69 +1,35 @@
-# CRUD Feature Workflow
+# CRUD Workflow
 
-Template: `backend/Features/CategoryFeature/`. Tests: `backend.Tests/Features/CategoryFeature/`.
-Copy file names, swap `Category`→`{Entity}`.
+Templates: `backend/Features/CategoryFeature/` · `client/admin-panel/features/category/` · `backend.Tests/Features/CategoryFeature/`. Swap `Category`→`{Entity}`.
 
 ## Prerequisites
 
-- [ ] Entity in `Domain/Entities/{Entity}.cs` — read required fields before writing tests
-- [ ] Table in PostgreSQL + `DATABASE.md`
+- [ ] `Domain/Entities/{Entity}.cs` + `DATABASE.md` section
+- [ ] Backend working before frontend
 
-## Create 5 Operation Folders
+## Backend
 
-```
-Features/{Entity}Feature/
-  Create{Entity}/       POST   api/{entities}     → 201
-  List{Entity}Paginated/ GET   api/{entities}     → 200
-  GetById{Entity}/       GET   api/{entities}/{id} → 200
-  Update{Entity}/        PUT   api/{entities}/{id} → 200
-  Delete{Entity}/        DELETE api/{entities}/{id} → 200
-```
+- [ ] 5 ops: Create/List/Get/Update/Delete under `Features/{Entity}Feature/`
+- [ ] Handler rules per `backend.mdc` — copy slug/pagination/delete guards from Category
+- [ ] 5 handler tests + `{Entity}IntegrationTests.cs` — `[Collection("Database")]`
 
-Each folder: `{Op}Endpoint.cs` (class `{Op}Controller`), `{Op}Handler.cs`, `{Op}Command.cs` or `{Op}Query.cs`.
-Update adds `Update{Entity}Request` mapped in endpoint.
+## Frontend
 
-## Handler Checklist
+- [ ] Copy `features/category/` → `features/{entity}/`
+- [ ] Update `api/`, `types/`, `schemas/`, `search-params.ts`, hooks, `index.ts` barrel
+- [ ] Routes: `app/(routes)/{entities}/` — list, new, `[id]/view`, `[id]/edit` (thin RSC shells)
+- [ ] `config/navigation.ts` `navMain` + `lib/messages.ar.ts`
 
-**Create:** trim → uniqueness (`"already exists"`) → FK (`"not found"`) → slug → timestamps → SaveChanges
+## Entity notes
 
-**List:** Page/Limit defaults → AsNoTracking → Search En/Ar → paginated response
-
-**GetById:** AsNoTracking → `"not found"`
-
-**Update:** load → re-validate uniqueness/FK excluding self → UpdatedAt → SaveChanges
-
-**Delete:** load → children/FK guard → Remove
-
-Copy from Category: slug (`CreateCategoryHandler`), pagination (`ListCategoryPaginatedHandler`), delete guards (`DeleteCategoryHandler`), update mapping (`UpdateCategoryEndpoint`).
-
-## Tests (mirror Category)
-
-```
-backend.Tests/Features/{Entity}Feature/
-  Create{Entity}HandlerTests.cs
-  Update{Entity}HandlerTests.cs
-  Delete{Entity}HandlerTests.cs
-  GetById{Entity}HandlerTests.cs
-  List{Entity}HandlerTests.cs
-  {Entity}IntegrationTests.cs
-```
-
-Use `[Collection("Database")]` + `DatabaseFixture`. Handler tests instantiate handler directly.
-Integration tests use `TestWebApplicationFactory`.
-
-## Entity Extras
-
-| Entity | See |
-|--------|-----|
-| Product | `productForExample.sql`, `Domain/Entities/Product.cs` (`Currency`, `Status` required) |
-| Order | `order_status_history` in DATABASE.md |
-| Cart | `carts.session_id` — session vs user |
+| Entity | Read |
+|--------|------|
+| Product | `Product.cs` + `DATABASE.md` § `products` (`currency`, `status`) |
+| Order | `Order.cs` + `DATABASE.md` § `orders`, `order_status_history` |
+| Cart | `Cart.cs` + `DATABASE.md` § `carts` (`session_id`) |
 
 ## Done
 
-- [ ] `dotnet build` in `backend/`
-- [ ] `dotnet test backend.Tests/backend.Tests.csproj` (Docker running)
-- [ ] All 5 routes in Scalar (`http://localhost:5101/scalar/v1`)
-- [ ] `DATABASE.md` updated only if schema changed
-
-No manual DI registration needed.
+- [ ] `dotnet build` + `dotnet test` (Docker)
+- [ ] `npm run typecheck && npm run build`
+- [ ] Scalar: `http://localhost:5101/scalar/v1`

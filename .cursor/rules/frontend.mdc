@@ -1,33 +1,38 @@
 ---
-description: Frontend rules when frontend/ exists
-globs: frontend/**/*
+description: Admin panel — Next.js 16 feature modules
+globs: client/admin-panel/**/*
 alwaysApply: false
 ---
 
 # Frontend
 
-**Status:** `frontend/` does not exist. Do not search for React/Next.js in repo.
+**Applies to:** `client/admin-panel/**/*`
 
-## When Adding
+**Template:** `features/category/`. **API:** `NEXT_PUBLIC_API_URL` → `lib/api-client.ts`.
 
-- Location: `frontend/` at repo root (Next.js + TypeScript per `.gitignore`)
-- API: `process.env.NEXT_PUBLIC_API_URL` — dev default `http://localhost:5101`
-- Mirror backend: `frontend/src/features/{entity}/` ↔ `Features/{Entity}Feature/`
+Next.js 16 differs from training data — read `node_modules/next/dist/docs/` before routing/data changes.
 
-## API Contract
+## Split
 
-```typescript
-type ApiResponse<T> = { success: boolean; message: string | null; data: T | null; errors: string[] | null };
-type Paginated<T> = { items: T[]; total: number; page: number; limit: number; totalPages: number };
-```
+| Server | Client (`"use client"`) |
+|--------|-------------------------|
+| `app/**/page.tsx`, layouts | `features/**/components/**`, `hooks/**` |
+| `features/**/api`, `schemas`, `types`, `search-params.ts` | `app-providers`, sidebar, kbar |
 
-- Gate on `success` before reading `data`
-- Display: `nameAr` when locale=`ar`, else `nameEn` — enable RTL
-- Server Components for fetch; `"use client"` only for interactivity/forms
+Routes: metadata + optional SSR prefetch → import page component from `@/features/{entity}` barrel only.
 
-## Scale
+## Feature module (copy category)
 
-- One feature folder per entity — no cross-imports between features
-- Shared UI → `frontend/src/components/ui/` only
-- API client per entity → `frontend/src/features/{entity}/api.ts`
-- Never duplicate backend rules (slugs, delete guards, uniqueness)
+`api/{entity}.api.ts` (private `Backend*` + `toDto`, gate `data.success`) · `hooks/use{Entity}.ts` (`{entity}Keys`, staleTime 60s) · `hooks/use{Entity}Mutations.ts` (invalidate lists, optimistic delete/status) · `schemas/` (Zod, msgs from `messages.ar.ts`) · `search-params.ts` (nuqs) · `components/pages/` (exported) · `components/blocks/` (internal) · `index.ts` (sole public export)
+
+## Actions
+
+- **List:** nuqs `useQueryStates(parsers, { history:'replace', shallow:true })` + TanStack Query
+- **Form:** `zodResolver` + `createSchema` / `updateSchema.partial()` + `FormActionsBar` + dirty `AlertDialog`
+- **Fields:** EN/slug `dir="ltr"`, AR `dir="rtl"`; empty optionals → `undefined` in payload
+- **New entity:** copy feature → `app/(routes)/{entities}/` (list/new/view/edit) → `config/navigation.ts` `navMain` → `lib/messages.ar.ts`
+- **Layout:** `PageContainer` → `PageHeader` → `ListPageCard` or `FormActionsBar`; tables use shared `DataTable`
+
+## Verify
+
+`cd client/admin-panel && npm run typecheck && npm run build`

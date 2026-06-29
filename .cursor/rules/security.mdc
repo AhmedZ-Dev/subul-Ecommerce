@@ -1,41 +1,16 @@
 ---
-description: Security — auth state, secrets, input handling
-globs: backend/**/*
-alwaysApply: false
+description: Auth state, secrets, input — project-specific only
+alwaysApply: true
 ---
 
 # Security
 
-## Auth (not implemented)
+**Auth:** JWT package installed; no `UseAuthentication()`; `[Authorize]` unused — all routes public. Wire JWT in `Program.cs` before adding auth. Keep `api/carts/*` + guest order track `[AllowAnonymous]`.
 
-All routes public. JWT package referenced; `Program.cs` has `UseAuthorization()` but no `UseAuthentication()`.
-Before `[Authorize]`: wire JWT in `Program.cs`, bcrypt `PasswordHash` (`User`, `AdminUser`), log admin actions to `ActivityLog`.
+**Secrets (never commit):** `.env*`, `appsettings.*.local.json`, `secrets.json`, `*.pem`/`*.key`. `NEXT_PUBLIC_*` is client-visible — API URL only, no tokens.
 
-**Guest checkout (keep public when auth lands):** `POST /api/orders`, `GET /api/orders/track`, all `api/carts/*` endpoints use `[AllowAnonymous]`. Cart merge after login: `POST /api/carts/merge`.
+**Input:** Backend — Command/Query records + EF LINQ only. Frontend — Zod on forms, nuqs typed parsers, slug regex `^[a-z0-9]+(?:-[a-z0-9]+)*$`.
 
-## Secrets — never commit
+**Responses:** No `PasswordHash`/tokens in API. 500 → generic message (`ExceptionHandlingMiddleware`). No `dangerouslySetInnerHTML`. JWT header → `lib/api-client.ts` when auth lands.
 
-`.env*`, `appsettings.*.local.json`, `secrets.json`, `*.pem`, `*.key`, `*.pfx`
-Production DB creds via env/secret manager — not `appsettings.Development.json`.
-
-## Input
-
-- Input via Command/Query records (Update via Request → Command mapping)
-- EF Core only for DB — no string-concat SQL
-- `ToLower()` + trim for case-insensitive checks (Category pattern)
-- Never return `PasswordHash` or tokens in responses
-
-## Errors
-
-`Result.Failure` for business errors — no stack traces. Middleware returns generic message on 500.
-FluentValidation → 400 with `errors[]` via `ExceptionHandlingMiddleware`.
-
-## CI security
-
-`.github/workflows/ci.yml`: CodeQL (C#), `dotnet list package --vulnerable`, Gitleaks on push/PR.
-
-## Future
-
-- `pages.content_*`: sanitize HTML on write, escape on render (CMS)
-- Payment: mask details; persist in `PaymentTransaction` only
-- Role checks via `admin_users.role` when auth lands
+**CI:** `.github/workflows/ci.yml` — CodeQL, vulnerable packages, Gitleaks.

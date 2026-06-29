@@ -2,41 +2,27 @@
 
 ## 1. Scope
 
-Entity? Backend, tests, or frontend? Which operation (Create/List/Get/Update/Delete)?
+Entity · layer (backend/frontend/tests/both) · operation (one op or full CRUD).
 
-## 2. Read (minimal)
+## 2. Read
 
-| Task | Files |
-|------|-------|
-| New CRUD | `CategoryFeature/` (5 ops), `Domain/Entities/{Entity}.cs`, one `DATABASE.md` section |
-| Edit feature | That operation's 3 files only |
-| Add tests | Matching file in `backend.Tests/Features/CategoryFeature/` + `Infrastructure/DatabaseFixture.cs` |
-| Infra | Target file in `Common/` or `DependencyInjection/` |
+Follow scan limits in `.cursor/rules/architecture.mdc`. Never full-repo scan.
 
-Never: 51 entities, full `AppDbContext.cs`, unrelated features, frontend search, `bin/`/`obj/`.
+## 3. Plan (before code)
 
-## 3. Plan (3–5 bullets)
-
-Files, routes, handler rules, test cases. Confirm with user if >5 new files.
+List: files to touch · routes/endpoints · handler/API transforms · tests. Confirm with user if >5 files or schema change.
 
 ## 4. Implement
 
-Copy `CategoryFeature` structure. Minimal diff. `Result<T>` + `ToActionResult()`.
-CRUD checklist: `docs/ai/feature-workflow.md`
+Copy `CategoryFeature/` or `features/category/`. Minimal diff. CRUD steps: `feature-workflow.md`.
 
 ## 5. Verify
 
 ```bash
-cd backend && dotnet build
-dotnet test ../backend.Tests/backend.Tests.csproj
+cd backend && dotnet build && dotnet test ../backend.Tests/backend.Tests.csproj
+cd client/admin-panel && npm run typecheck && npm run build
 ```
-
-Scalar: `http://localhost:5101/scalar/v1` (tests need Docker).
 
 ## 6. Stuck?
 
-1. Closest operation in `CategoryFeature/`
-2. `DATABASE.md` table section
-3. Ask user — don't guess auth/schema/entity fields
-
-Anti-patterns: `.cursor/rules/architecture.mdc`
+Nearest Category op · `DATABASE.md` table · `architecture.mdc` anti-patterns · ask user (don't guess auth/fields).

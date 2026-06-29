@@ -1,61 +1,21 @@
 ---
-description: backend.Tests patterns — Testcontainers, handler + integration
+description: backend.Tests — Testcontainers pattern
 globs: backend.Tests/**/*
 alwaysApply: false
 ---
 
 # Testing
 
-**Project:** `backend.Tests/` — xUnit + Testcontainers PostgreSQL + `Microsoft.AspNetCore.Mvc.Testing`.
-**CI:** `.github/workflows/ci.yml` runs `dotnet test` on push/PR to `main`/`develop`. Requires Docker.
+**Applies to:** `backend.Tests/**/*`
 
-## Layout
+**Stack:** xUnit + Testcontainers PostgreSQL + `WebApplicationFactory<Program>`. **Template:** `Features/CategoryFeature/`. Docker required.
 
-```
-backend.Tests/
-├── Infrastructure/
-│   DatabaseFixture.cs          # shared PostgreSQL container + EnsureCreated
-│   DatabaseCollection.cs       # [CollectionDefinition("Database")]
-│   TestWebApplicationFactory.cs
-└── Features/{Entity}Feature/
-    {Op}HandlerTests.cs
-    {Entity}IntegrationTests.cs
-```
+**Handler:** `[Collection("Database")]` · `fixture.CreateContext()` · `new {Op}Handler(context)` · assert `IsSuccess` or error contains `"not found"`/`"already exists"`. No MediatR mock, no `UseInMemoryDatabase`.
 
-Mirror `backend/Features/` structure. Template: `CategoryFeature/` (5 handler test files + integration).
+**Integration:** `TestWebApplicationFactory(connectionString)` + `HttpClient` · assert status + JSON `success`/`data` · `Guid.NewGuid()` in names · `[Collection("Database")]`.
 
-## Handler Tests
+**Needs:** `public partial class Program { }` · `Npgsql.EnableLegacyTimestampBehavior` in `Program.cs` + `DatabaseFixture`.
 
-```csharp
-[Collection("Database")]
-public class CreateCategoryHandlerTests(DatabaseFixture fixture)
-{
-    // fixture.CreateContext() → new Handler(context) → handler.Handle(cmd, CT)
-}
-```
+**Skip:** scaffold mapping tests, JSON snapshots, in-memory DB.
 
-Assert `result.IsSuccess` or error contains `"not found"` / `"already exists"`.
-Cover: success, not found, already exists, delete-with-children (and entity-specific cases from Category).
-
-Direct handler instantiation — do not mock MediatR.
-
-## Integration Tests
-
-`TestWebApplicationFactory(fixture.ConnectionString)` + `HttpClient`.
-Assert HTTP status (201/404/409/400) + JSON `success`/`data` shape (`CategoryIntegrationTests.cs`).
-
-Use `Guid.NewGuid()` in names to avoid collisions. `[Collection("Database")]` shares one container.
-
-## Requirements
-
-- Docker running locally for `dotnet test`
-- `AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true)` — in `DatabaseFixture` and `Program.cs`
-- `public partial class Program { }` at end of `Program.cs`
-
-## Skip
-
-EF scaffold mapping tests, full JSON snapshots, `UseInMemoryDatabase`, mocking MediatR in HTTP tests.
-
-## Priority (next entities)
-
-Product → Cart/Order → Auth
+**Frontend (no tests yet):** `npm run typecheck && npm run build` in `client/admin-panel/`.

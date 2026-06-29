@@ -1,51 +1,37 @@
 ---
-description: Backend feature implementation rules
+description: MediatR vertical slices, handlers, Result flow
 globs: backend/**/*
 alwaysApply: false
 ---
 
 # Backend
 
-Copy `Features/CategoryFeature/` — 5 operations × 3 files each:
+**Applies to:** `backend/**/*`
 
-| Operation | Route | Folder |
-|-----------|-------|--------|
-| List{Entity}Paginated | GET `api/{entities}` | `ListCategoryPaginated/` |
-| Create{Entity} | POST `api/{entities}` | `CreateCategory/` |
-| GetById{Entity} | GET `api/{entities}/{id:long}` | `GetByIdCategory/` |
-| Update{Entity} | PUT `api/{entities}/{id:long}` | `UpdateCategory/` |
-| Delete{Entity} | DELETE `api/{entities}/{id:long}` | `DeleteCategory/` |
+**Template:** `Features/CategoryFeature/`. **Namespace:** `backend`. Copy 3 files per op; swap `Category`→`{Entity}`.
 
-## Controller (`*Endpoint.cs` → class `*Controller`)
+| Op | HTTP | Route |
+|----|------|-------|
+| List{Entity}Paginated | GET | `api/{entities}` |
+| Create{Entity} | POST | `api/{entities}` → 201 |
+| GetById{Entity} | GET | `api/{entities}/{id:long}` |
+| Update{Entity} | PUT | `api/{entities}/{id:long}` |
+| Delete{Entity} | DELETE | `api/{entities}/{id:long}` |
 
-- `[ApiController]` + `[Route("api/…")]` + `[Tags("…")]`
-- Primary ctor `(ISender sender)` — zero business logic
-- Create/Get/List/Delete: send Command/Query directly from body or route
-- Update: `[FromBody] Update{Entity}Request` → map to `Update{Entity}Command` with route `id`
-- `sender.Send(cmd)` → `result.ToActionResult()` (201 for POST)
+Ref: `CreateCategoryEndpoint.cs`, `UpdateCategoryEndpoint.cs` (Request→Command+route id), `DeleteCategoryHandler.cs` (FK guards).
 
-Ref: `CreateCategoryEndpoint.cs`, `UpdateCategoryEndpoint.cs`
+## Controller
 
-## Handler (`*Handler.cs`)
+`[ApiController]` `[Route("api/…")]` `[Tags]` · ctor `ISender` · `sender.Send` → `ToActionResult()` (201 on POST) · zero business logic.
 
-- `IRequestHandler<T, Result<TResponse>>` + `(AppDbContext context)`
-- Reads: `AsNoTracking()`. Writes: tracked + `SaveChangesAsync(cancellationToken)`
-- Trim: `command.NameEn.Trim()`. Case checks: `.ToLower()` (Category pattern)
-- Bilingual search: both `NameEn` and `NameAr` (`ListCategoryPaginatedHandler.cs`)
-- List defaults: `Page=1`, `Limit=10` → `(items, total, page, limit, totalPages)`
-- Delete: FK/children guard first (`DeleteCategoryHandler.cs`)
-- Slug: normalize + uniqueness loop (`CreateCategoryHandler.cs`)
-- Timestamps: `DateTime.Now`
+## Handler
 
-## Records
+`IRequestHandler<T, Result<TResponse>>` + `AppDbContext` · reads `AsNoTracking()` · writes tracked + `SaveChangesAsync` · `Trim()`/`ToLower()` · list defaults Page=1 Limit=10 · search NameEn+NameAr · `DateTime.Now`.
 
-Command/Query + Response co-located in `{Op}Command.cs` or `{Op}Query.cs`.
-Update adds separate `Update{Entity}Request` in same file as command.
+**Domain rules in handler** (uniqueness, FK, slug, delete guards). Shape validation → `AbstractValidator<T>` only when needed (`ValidationBehavior` → 400 `errors[]`); none exist for Category yet.
 
-## Validation (current state)
+**Records:** Command/Query + Response same file; Update has separate `Update{Entity}Request`.
 
-- **Category:** all domain rules in handler (uniqueness, FK, slug, delete guards)
-- **Shape validation:** `ValidationBehavior` + FluentValidation registered — add `AbstractValidator<T>` per command when needed; throws → middleware 400 + `errors[]`
-- Do not move domain rules (uniqueness, FK) into validators
+## Verify
 
-Handlers + validators auto-register from assembly. No manual DI per handler.
+`cd backend && dotnet build && dotnet test ../backend.Tests/backend.Tests.csproj`

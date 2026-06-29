@@ -1,81 +1,56 @@
 ---
-description: Core architecture, scan limits, anti-patterns
+description: Monorepo map, scan limits, anti-patterns — synced with AGENTS.md
 alwaysApply: true
 ---
 
-# Subul-Ecommerce
-
-**Stack:** ASP.NET Core 10 + PostgreSQL + EF Core + MediatR. Backend in `backend/`. Tests in `backend.Tests/`. Frontend planned — not built.
-
-**Template:** `backend/Features/CategoryFeature/` + matching tests in `backend.Tests/Features/CategoryFeature/`.
-**Schema:** `DATABASE.md` (one table section). **Seed example:** `productForExample.sql`.
-
-## Structure
+# Architecture
 
 ```
-backend/
-├── Common/              Result, ApiResponse, middleware, ValidationBehavior
-├── DependencyInjection/ AddApplication(), AddInfrastructure()
-├── Domain/Entities/     51 scaffolded partial classes
-├── Features/{Entity}Feature/{Operation}/  *Endpoint.cs + Handler + Command|Query
-└── Infrastructure/Persistence/  AppDbContext.cs (scaffold) + AppDbContext.Partial.cs (edit)
-
-backend.Tests/
-├── Infrastructure/      DatabaseFixture, DatabaseCollection, TestWebApplicationFactory
-└── Features/{Entity}Feature/  Handler tests + {Entity}IntegrationTests.cs
-
-.github/workflows/ci.yml   build + test + CodeQL + dependency audit + Gitleaks
+backend/ + backend.Tests/     ASP.NET Core 10, MediatR, EF Core, PostgreSQL
+client/admin-panel/           Next.js 16 admin (RTL) — only frontend
+DATABASE.md                   one table section per read
+docs/ai/                      task-template.md, feature-workflow.md
 ```
 
-## Flow
+**Flow:** `RSC page → features/{entity} (client) → hooks → *.api.ts → api/{entities} → Handler → Result<T> → ApiResponse<T>`
 
-`Endpoint → ISender → ValidationBehavior → Handler(AppDbContext) → Result<T> → ToActionResult() → ApiResponse<T>`
-
-Failure strings: `"not found"`→404 | `"already exists"`→409 | else→400. POST → `StatusCodes.Status201Created`.
-
-`Program.cs` ends with `public partial class Program { }` — required for `WebApplicationFactory<Program>`.
-
-## Naming
-
-| Item | Pattern | Example |
-|------|---------|---------|
-| Feature | `{Entity}Feature` | `CategoryFeature` |
-| Operation | `{Verb}{Entity}` | `CreateCategory` |
-| Files | `{Op}Endpoint.cs`, `{Op}Handler.cs`, `{Op}Command.cs` | folder `CreateCategory/` |
-| Class in Endpoint file | `{Op}Controller` | `CreateCategoryController` in `CreateCategoryEndpoint.cs` |
-| Route | `api/{plural}` | `api/categories` |
-| Namespace | `backend` | lowercase root |
+**Naming:** `{Entity}Feature` / `{Verb}{Entity}` / `api/{plural}` / `{Op}Endpoint.cs`+`{Op}Controller` / `features/{entity}/` / `{Entity}ListingPage`
 
 ## Scan Limits
 
 | Task | Read only |
 |------|-----------|
-| New CRUD entity | `CategoryFeature/` (5 ops), `Domain/Entities/{Entity}.cs`, one `DATABASE.md` section |
-| Edit one operation | That op's 3 files under `Features/{Entity}Feature/{Op}/` |
-| Add tests | Mirror file in `backend.Tests/Features/CategoryFeature/` + `Infrastructure/DatabaseFixture.cs` |
-| DB config | `AppDbContext.Partial.cs` only |
+| New backend CRUD | `CategoryFeature/` (5 ops), `Domain/Entities/{Entity}.cs`, one `DATABASE.md` section |
+| Edit backend op | 3 files in `Features/{Entity}Feature/{Op}/` |
+| New/edit frontend | `client/admin-panel/features/category/` or `features/{entity}/` |
+| Backend tests | Mirror `backend.Tests/Features/CategoryFeature/` |
+| DB config | `AppDbContext.Partial.cs` |
 
-**Never read:** all 51 entities, full `AppDbContext.cs` (~2300 lines), unrelated features, `bin/`/`obj/`, frontend search (no `frontend/` yet).
+**Never:** 51 entities, full `AppDbContext.cs`, unrelated features, `frontend/` (wrong path), `bin/`/`obj/`, `.next/`, all `components/ui/`
 
-Details: backend→`backend.mdc` | tests→`testing.mdc` | security→`security.mdc` | CRUD→`docs/ai/feature-workflow.md`
+## Anti-Patterns
 
-## Anti-Patterns (recurring agent mistakes)
+| Don't | Do |
+|-------|-----|
+| Search `frontend/` or entire repo | Grep within one `Features/{Entity}Feature/` or `features/{entity}/` |
+| Read/guess entity fields | Read `Domain/Entities/{Entity}.cs` first |
+| Build frontend before backend API | API-first |
+| Repository/service layer | Handler → `AppDbContext` direct |
+| Edit `AppDbContext.cs` / EF migrations | `AppDbContext.Partial.cs` + SQL + `DATABASE.md` |
+| `Result.Failure` typed `Error` record / throw business errors | `Result.Failure("… not found")` string |
+| Wrong failure phrases | `"not found"`→404, `"already exists"`→409 |
+| `DateTime.UtcNow` | `DateTime.Now` + Npgsql legacy timestamp switch |
+| Assume JWT/`[Authorize]`/`FluentValidation` on Category | Auth not wired; Category validates inline in handlers |
+| Rename `*Endpoint` file or `*Controller` class | Keep both names |
+| `UseInMemoryDatabase` / mock MediatR in tests | Testcontainers `DatabaseFixture` |
+| Register `LoggingBehavior` | Not in DI |
+| Query `Attribute` entity | DbSet alias `AttributeEntity` |
+| Extract shared DTOs before 3+ features | Duplicate like Category |
+| Import `features/x/hooks/...` from pages | `@/features/x` barrel only |
+| Cross-import between features | Shared → `components/` or `lib/` |
+| Inline Arabic / duplicate backend rules in UI | `messages.ar.ts` + show API errors |
+| Edit `components/ui/` by hand | `npx shadcn@latest add` |
+| `ml-`/`mr-` in RTL app | `ms-`/`me-`/`start`/`end` |
+| `Product.IsActive`/`IsDigital` guesses | `Product` needs `Currency`, `Status` |
 
-| Don't | Do instead |
-|-------|------------|
-| Assume JWT/`[Authorize]` works | Package installed; no `UseAuthentication()` in `Program.cs` |
-| Assume FluentValidation on Category | Infra wired; Category validates inline in handlers — no validators yet |
-| Guess entity fields | Read `Domain/Entities/{Entity}.cs` first (e.g. `Product` needs `Currency`, `Status` — no `IsActive`/`IsDigital`) |
-| Rename `*Controller` ↔ `*Endpoint` | File: `{Op}Endpoint.cs`. Class: `{Op}Controller`. Keep both. |
-| Use `UseInMemoryDatabase` for FK/delete tests | Testcontainers via `DatabaseFixture` |
-| Use `DateTime.UtcNow` | `DateTime.Now` + `Npgsql.EnableLegacyTimestampBehavior` switch |
-| Edit `AppDbContext.cs` | Scaffold only — use `AppDbContext.Partial.cs` |
-| Create EF migrations | Schema via SQL + `DATABASE.md` |
-| Add repository/service layer | Handlers inject `AppDbContext` directly |
-| Throw for business errors | `Result.Failure("… not found")` |
-| Use unused `Error` record | `Result.Failure(string)` |
-| Register `LoggingBehavior` | File exists; not in DI |
-| Query `Attribute` entity | DbContext alias: `AttributeEntity` |
-| Extract shared DTOs early | Duplicate like Category until 3+ features need it |
-| Build frontend before backend API | API first — no `frontend/` yet |
-| Search entire repo for patterns | Grep within `Features/{Entity}Feature/` or `backend.Tests/Features/{Entity}Feature/` |
+**Workflow:** `docs/ai/task-template.md` → `docs/ai/feature-workflow.md`. **Sections:** Security, Backend, Frontend, Testing (below).
