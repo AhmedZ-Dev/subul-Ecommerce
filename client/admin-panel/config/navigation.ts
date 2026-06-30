@@ -3,6 +3,7 @@ import {
   FolderIcon,
   SearchIcon,
   DatabaseIcon,
+  TagIcon,
 } from "lucide-react"
 import { messages } from "@/lib/messages.ar"
 
@@ -21,6 +22,24 @@ export const navMain = [
     title: messages.nav.categories,
     url: "/categories",
     icon: FolderIcon,
+  },
+  {
+    id: "brands",
+    title: messages.nav.brands,
+    url: "/brands",
+    icon: TagIcon,
+  },
+  {
+    id: "attributeGroups",
+    title: messages.nav.attributeGroups,
+    url: "/attribute-groups",
+    icon: DatabaseIcon,
+  },
+  {
+    id: "collections",
+    title: messages.nav.collections,
+    url: "/collections",
+    icon: FolderIcon, // We can use FolderIcon or another suitable one
   },
 ] as const
 
@@ -64,5 +83,26 @@ export const kbarQuickActions = [
     url: "/categories/new",
     section: messages.kbar.sectionActions,
     subtitle: messages.kbar.addCategorySubtitle,
+  },
+  {
+    id: "add-brand",
+    name: messages.kbar.addBrand,
+    url: "/brands/new",
+    section: messages.kbar.sectionActions,
+    subtitle: messages.kbar.addBrandSubtitle,
+  },
+  {
+    id: "add-attribute-group",
+    name: messages.kbar.addAttributeGroup,
+    url: "/attribute-groups/new",
+    section: messages.kbar.sectionActions,
+    subtitle: messages.kbar.addAttributeGroupSubtitle,
+  },
+  {
+    id: "add-collection",
+    name: messages.kbar.addCollection,
+    url: "/collections/new",
+    section: messages.kbar.sectionActions,
+    subtitle: messages.kbar.addCollectionSubtitle,
   },
 ] as const

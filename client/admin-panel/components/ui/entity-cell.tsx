@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
@@ -10,6 +11,8 @@ interface EntityCellProps {
   fallback?: React.ReactNode;
   className?: string;
   subtitleDir?: 'rtl' | 'ltr' | 'auto';
+  /** Use for API-hosted assets (bypasses Next image optimizer). */
+  unoptimizedThumbnail?: boolean;
 }
 
 export function EntityCell({
@@ -20,17 +23,27 @@ export function EntityCell({
   fallback,
   className,
   subtitleDir,
+  unoptimizedThumbnail = true,
 }: EntityCellProps) {
+  const [imageError, setImageError] = useState(false);
+  const showThumbnail = thumbnailUrl && !imageError;
+
+  useEffect(() => {
+    setImageError(false);
+  }, [thumbnailUrl]);
+
   return (
     <div className={cn('flex items-center gap-3', className)}>
       <div className="bg-muted flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full">
-        {thumbnailUrl ? (
+        {showThumbnail ? (
           <Image
             src={thumbnailUrl}
             alt={thumbnailAlt ?? title}
             width={40}
             height={40}
-            className="size-full object-cover"
+            unoptimized={unoptimizedThumbnail}
+            className="size-full object-contain p-1"
+            onError={() => setImageError(true)}
           />
         ) : (
           fallback
