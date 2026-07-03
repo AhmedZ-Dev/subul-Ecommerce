@@ -11,8 +11,27 @@ public class TestImageStorageService(string rootPath) : IImageStorageService
 
     private const long MaxFileSizeBytes = 5_242_880;
 
-    public async Task<Result<string>> SaveProductImageAsync(
+    public Task<Result<string>> SaveProductImageAsync(
         long productId,
+        IFormFile file,
+        CancellationToken cancellationToken) =>
+        SaveImageAsync($"products/{productId}", $"{Guid.NewGuid():N}", file, cancellationToken);
+
+    public Task<Result<string>> SaveBrandImageAsync(
+        long brandId,
+        string slot,
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        if (slot is not ("logo" or "banner"))
+            return Task.FromResult(Result<string>.Failure("Invalid brand image slot"));
+
+        return SaveImageAsync($"brands/{brandId}", $"{slot}-{Guid.NewGuid():N}", file, cancellationToken);
+    }
+
+    private async Task<Result<string>> SaveImageAsync(
+        string folder,
+        string fileBaseName,
         IFormFile file,
         CancellationToken cancellationToken)
     {
@@ -27,8 +46,15 @@ public class TestImageStorageService(string rootPath) : IImageStorageService
             !AllowedExtensions.Contains(extension, StringComparer.OrdinalIgnoreCase))
             return Result<string>.Failure("Invalid image file");
 
-        var fileName = $"{Guid.NewGuid():N}{extension}";
-        var relativePath = $"/img/products/{productId}/{fileName}";
+        await using var inputStream = file.OpenReadStream();
+        using var buffer = new MemoryStream();
+        await inputStream.CopyToAsync(buffer, cancellationToken);
+
+        if (!ValidateImageContent(buffer, extension))
+            return Result<string>.Failure("Invalid image file");
+
+        var fileName = $"{fileBaseName}{extension}";
+        var relativePath = $"/img/{folder}/{fileName}";
         var physicalPath = GetPhysicalPath(relativePath);
 
         Directory.CreateDirectory(Path.GetDirectoryName(physicalPath)!);
@@ -39,9 +65,19 @@ public class TestImageStorageService(string rootPath) : IImageStorageService
             FileAccess.Write,
             FileShare.None);
 
-        await file.CopyToAsync(stream, cancellationToken);
+        buffer.Position = 0;
+        await buffer.CopyToAsync(stream, cancellationToken);
 
         return Result<string>.Success(relativePath);
+    }
+
+    private static bool ValidateImageContent(MemoryStream buffer, string extension)
+    {
+        buffer.Position = 0;
+        var header = new byte[12];
+        var bytesRead = buffer.Read(header, 0, header.Length);
+        buffer.Position = 0;
+        return ImageFileSignatures.MatchesExtension(header, bytesRead, extension);
     }
 
     public Task DeleteByRelativePathAsync(
@@ -54,6 +90,11 @@ public class TestImageStorageService(string rootPath) : IImageStorageService
             File.Delete(physicalPath);
 
         return Task.CompletedTask;
+    }
+
+    public string GetPhysicalPathForRelativeUrl(string relativeUrl)
+    {
+        return GetPhysicalPath(relativeUrl.StartsWith('/') ? relativeUrl : $"/{relativeUrl}");
     }
 
     private string GetPhysicalPath(string relativePath)
@@ -69,6 +110,13 @@ public class TestImageStorageService(string rootPath) : IImageStorageService
         if (relativeFromImg.Contains("..", StringComparison.Ordinal))
             throw new InvalidOperationException("Invalid image path");
 
-        return Path.GetFullPath(Path.Combine(rootPath, relativeFromImg));
+        var imgRoot = Path.GetFullPath(rootPath);
+        var fullPath = Path.GetFullPath(Path.Combine(imgRoot, relativeFromImg));
+
+        if (!fullPath.StartsWith(imgRoot + Path.DirectorySeparatorChar, StringComparison.Ordinal) &&
+            !fullPath.Equals(imgRoot, StringComparison.Ordinal))
+            throw new InvalidOperationException("Invalid image path");
+
+        return fullPath;
     }
 }

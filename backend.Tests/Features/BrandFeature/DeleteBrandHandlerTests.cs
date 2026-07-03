@@ -1,6 +1,7 @@
 using backend.Domain.Entities;
 using backend.Features.BrandFeature.CreateBrand;
 using backend.Features.BrandFeature.DeleteBrand;
+using backend.Features.BrandFeature.UploadBrandLogo;
 using backend.Tests.Infrastructure;
 
 namespace backend.Tests.Features.BrandFeature;
@@ -21,7 +22,8 @@ public class DeleteBrandHandlerTests(DatabaseFixture fixture)
     {
         var id = await SeedBrandAsync("Delete Me Brand");
         await using var context = fixture.CreateContext();
-        var handler = new DeleteBrandHandler(context);
+        var storage = ProductImageTestHelpers.CreateStorageService();
+        var handler = new DeleteBrandHandler(context, storage);
 
         var result = await handler.Handle(new DeleteBrandCommand(id), CancellationToken.None);
 
@@ -33,7 +35,8 @@ public class DeleteBrandHandlerTests(DatabaseFixture fixture)
     public async Task Handle_NonExistentId_ReturnsNotFound()
     {
         await using var context = fixture.CreateContext();
-        var handler = new DeleteBrandHandler(context);
+        var storage = ProductImageTestHelpers.CreateStorageService();
+        var handler = new DeleteBrandHandler(context, storage);
 
         var result = await handler.Handle(new DeleteBrandCommand(999999), CancellationToken.None);
 
@@ -64,7 +67,8 @@ public class DeleteBrandHandlerTests(DatabaseFixture fixture)
         });
         await context.SaveChangesAsync();
 
-        var handler = new DeleteBrandHandler(context);
+        var storage = ProductImageTestHelpers.CreateStorageService();
+        var handler = new DeleteBrandHandler(context, storage);
         var result = await handler.Handle(new DeleteBrandCommand(brandId), CancellationToken.None);
 
         Assert.False(result.IsSuccess);

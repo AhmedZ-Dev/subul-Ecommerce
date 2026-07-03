@@ -10,6 +10,12 @@ public interface IImageStorageService
         IFormFile file,
         CancellationToken cancellationToken);
 
+    Task<Result<string>> SaveBrandImageAsync(
+        long brandId,
+        string slot,
+        IFormFile file,
+        CancellationToken cancellationToken);
+
     Task DeleteByRelativePathAsync(
         string relativePath,
         CancellationToken cancellationToken);

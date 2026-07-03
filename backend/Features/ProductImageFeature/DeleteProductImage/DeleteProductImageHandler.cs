@@ -26,7 +26,8 @@ public class DeleteProductImageHandler(AppDbContext context, IImageStorageServic
         context.ProductImages.Remove(image);
         await context.SaveChangesAsync(cancellationToken);
 
-        await imageStorage.DeleteByRelativePathAsync(imageUrl, cancellationToken);
+        if (imageUrl.StartsWith("/img/products/", StringComparison.OrdinalIgnoreCase))
+            await imageStorage.DeleteByRelativePathAsync(imageUrl, cancellationToken);
 
         return Result<bool>.Success(true);
     }

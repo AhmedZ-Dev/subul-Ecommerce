@@ -1,11 +1,28 @@
 using backend.Common.Middleware;
+using backend.Common.Storage;
 using backend.DependencyInjection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+var maxImageBytes = builder.Configuration
+    .GetSection(ImageStorageOptions.SectionName)
+    .GetValue<long>("MaxFileSizeBytes", 5_242_880);
+var multipartLimit = maxImageBytes + 65_536;
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = multipartLimit;
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = multipartLimit;
+});
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();

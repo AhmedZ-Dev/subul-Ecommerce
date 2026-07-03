@@ -14,6 +14,9 @@ public class CreateProductImageHandler(AppDbContext context, IImageStorageServic
         CreateProductImageCommand command,
         CancellationToken cancellationToken)
     {
+        if (command.Image is null || command.Image.Length == 0)
+            return Result<ProductImageResponse>.Failure("Image file is required");
+
         var productExists = await context.Products.AnyAsync(
             p => p.Id == command.ProductId,
             cancellationToken);
@@ -39,6 +42,8 @@ public class CreateProductImageHandler(AppDbContext context, IImageStorageServic
         if (!saveResult.IsSuccess)
             return Result<ProductImageResponse>.Failure(saveResult.Error!);
 
+        var imageUrl = saveResult.Value!;
+
         if (command.IsPrimary)
             await ClearOtherPrimaryImagesAsync(command.ProductId, null, cancellationToken);
 
@@ -47,7 +52,7 @@ public class CreateProductImageHandler(AppDbContext context, IImageStorageServic
         {
             ProductId = command.ProductId,
             VariantId = command.VariantId,
-            ImageUrl = saveResult.Value!,
+            ImageUrl = imageUrl,
             AltText = command.AltText?.Trim(),
             SortOrder = command.SortOrder,
             IsPrimary = command.IsPrimary,
@@ -55,7 +60,16 @@ public class CreateProductImageHandler(AppDbContext context, IImageStorageServic
         };
 
         context.ProductImages.Add(image);
-        await context.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch
+        {
+            await imageStorage.DeleteByRelativePathAsync(imageUrl, cancellationToken);
+            throw;
+        }
 
         return Result<ProductImageResponse>.Success(MapResponse(image));
     }

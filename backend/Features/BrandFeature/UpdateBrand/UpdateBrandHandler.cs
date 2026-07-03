@@ -33,8 +33,6 @@ public class UpdateBrandHandler(AppDbContext context)
 
         brand.Name = normalizedName;
         brand.Slug = slug;
-        brand.LogoUrl = command.LogoUrl;
-        brand.BannerUrl = command.BannerUrl;
         brand.DescriptionEn = command.DescriptionEn;
         brand.DescriptionAr = command.DescriptionAr;
         brand.WebsiteUrl = command.WebsiteUrl?.Trim();

@@ -31,8 +31,8 @@ public class CreateBrandHandler(AppDbContext context)
         {
             Name = normalizedName,
             Slug = slug,
-            LogoUrl = command.LogoUrl,
-            BannerUrl = command.BannerUrl,
+            LogoUrl = null,
+            BannerUrl = null,
             DescriptionEn = command.DescriptionEn,
             DescriptionAr = command.DescriptionAr,
             WebsiteUrl = command.WebsiteUrl?.Trim(),

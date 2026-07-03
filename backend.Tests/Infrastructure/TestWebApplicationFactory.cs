@@ -15,6 +15,17 @@ public class TestWebApplicationFactory(string connectionString)
         "subul-test-img",
         Guid.NewGuid().ToString("N"));
 
+    public string TestImageRoot => _testImageRoot;
+
+    public string GetPhysicalPathForRelativeUrl(string relativeUrl)
+    {
+        var normalized = relativeUrl.Replace('\\', '/').TrimStart('/');
+        if (normalized.StartsWith("img/", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized["img/".Length..];
+
+        return Path.GetFullPath(Path.Combine(_testImageRoot, normalized.Replace('/', Path.DirectorySeparatorChar)));
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // UseSetting runs at host level before WebApplication.CreateBuilder reads config

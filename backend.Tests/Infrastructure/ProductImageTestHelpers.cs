@@ -45,4 +45,15 @@ public static class ProductImageTestHelpers
             ContentType = "text/plain"
         };
     }
+
+    public static IFormFile CreateFakePngFormFile(string fileName = "fake.png")
+    {
+        var bytes = "not an image"u8.ToArray();
+        var stream = new MemoryStream(bytes);
+        return new FormFile(stream, 0, stream.Length, "Image", fileName)
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "image/png"
+        };
+    }
 }
