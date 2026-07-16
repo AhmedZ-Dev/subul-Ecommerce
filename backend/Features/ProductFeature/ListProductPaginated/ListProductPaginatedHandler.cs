@@ -1,3 +1,4 @@
+using System.Text.Json;
 using backend.Common.Results;
 using backend.Infrastructure.Persistence;
 using MediatR;
@@ -33,8 +34,32 @@ public class ListProductPaginatedHandler(AppDbContext context)
         if (query.CategoryId is not null)
             productQuery = productQuery.Where(p => p.CategoryId == query.CategoryId);
 
-        if (query.BrandId is not null)
+        if (query.BrandIds is { Count: > 0 })
+            productQuery = productQuery.Where(p => p.BrandId != null && query.BrandIds.Contains(p.BrandId.Value));
+        else if (query.BrandId is not null)
             productQuery = productQuery.Where(p => p.BrandId == query.BrandId);
+
+        if (query.MinPrice is not null)
+            productQuery = productQuery.Where(p => p.Price >= query.MinPrice.Value);
+
+        if (query.MaxPrice is not null)
+            productQuery = productQuery.Where(p => p.Price <= query.MaxPrice.Value);
+
+        if (query.InStockOnly == true)
+            productQuery = productQuery.Where(p => p.StockQuantity > 0);
+
+        var attributeFilters = ParseAttributeFilters(query.Attrs);
+        foreach (var (groupId, values) in attributeFilters)
+        {
+            productQuery = productQuery.Where(p => p.ProductAttributeValues.Any(av =>
+                av.Attribute.GroupId == groupId &&
+                (
+                    (av.ValueText != null && values.Contains(av.ValueText)) ||
+                    (av.ValueNumber != null && values.Contains(FormatNumberValue(av.ValueNumber.Value))) ||
+                    (av.ValueBoolean == true && values.Contains("true")) ||
+                    (av.ValueBoolean == false && values.Contains("false"))
+                )));
+        }
 
         if (!string.IsNullOrWhiteSpace(query.Status))
         {
@@ -91,9 +116,16 @@ public class ListProductPaginatedHandler(AppDbContext context)
                 CategoryIdValue = p.Category != null ? (long?)p.Category.Id : null,
                 CategoryNameEn = p.Category != null ? p.Category.NameEn : null,
                 CategoryNameAr = p.Category != null ? p.Category.NameAr : null,
+                CategorySlug = p.Category != null ? p.Category.Slug : null,
                 BrandIdValue = p.Brand != null ? (long?)p.Brand.Id : null,
                 BrandName = p.Brand != null ? p.Brand.Name : null,
-                BrandSlug = p.Brand != null ? p.Brand.Slug : null
+                BrandSlug = p.Brand != null ? p.Brand.Slug : null,
+                PrimaryImageUrl = context.ProductImages
+                    .Where(pi => pi.ProductId == p.Id)
+                    .OrderByDescending(pi => pi.IsPrimary)
+                    .ThenBy(pi => pi.SortOrder)
+                    .Select(pi => pi.ImageUrl)
+                    .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -119,11 +151,12 @@ public class ListProductPaginatedHandler(AppDbContext context)
             p.CreatedAt,
             p.UpdatedAt,
             p.CategoryIdValue is not null
-                ? new ProductCategoryInfo(p.CategoryIdValue.Value, p.CategoryNameEn!, p.CategoryNameAr)
+                ? new ProductCategoryInfo(p.CategoryIdValue.Value, p.CategoryNameEn!, p.CategoryNameAr, p.CategorySlug!)
                 : null,
             p.BrandIdValue is not null
                 ? new ProductBrandInfo(p.BrandIdValue.Value, p.BrandName!, p.BrandSlug!)
-                : null)).ToList();
+                : null,
+            p.PrimaryImageUrl)).ToList();
 
         var response = new ListProductPaginatedResponse(
             items,
@@ -134,4 +167,36 @@ public class ListProductPaginatedHandler(AppDbContext context)
 
         return Result<ListProductPaginatedResponse>.Success(response);
     }
+
+    private static Dictionary<long, List<string>> ParseAttributeFilters(string? attrs)
+    {
+        if (string.IsNullOrWhiteSpace(attrs))
+            return [];
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<Dictionary<string, List<string>>>(attrs);
+            if (parsed is null)
+                return [];
+
+            return parsed
+                .Where(kvp => long.TryParse(kvp.Key, out _))
+                .ToDictionary(
+                    kvp => long.Parse(kvp.Key),
+                    kvp => kvp.Value
+                        .Where(v => !string.IsNullOrWhiteSpace(v))
+                        .Select(v => v.Trim())
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToList());
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    private static string FormatNumberValue(decimal value) =>
+        value == decimal.Truncate(value)
+            ? ((long)value).ToString()
+            : value.ToString("0.##");
 }

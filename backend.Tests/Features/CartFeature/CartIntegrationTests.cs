@@ -11,6 +11,7 @@ public class CartIntegrationTests : IAsyncLifetime
     private readonly DatabaseFixture _fixture;
     private TestWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
+    private HttpClient _adminClient = null!;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,16 +23,18 @@ public class CartIntegrationTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new TestWebApplicationFactory(_fixture.ConnectionString);
         _client = _factory.CreateClient();
-        return Task.CompletedTask;
+        await using var context = _fixture.CreateContext();
+        _adminClient = await AuthTestHelper.CreateAuthenticatedClientAsync(_factory, context);
     }
 
     public async Task DisposeAsync()
     {
         _client.Dispose();
+        _adminClient.Dispose();
         await _factory.DisposeAsync();
     }
 
@@ -75,7 +78,7 @@ public class CartIntegrationTests : IAsyncLifetime
             stockQuantity = 20
         };
 
-        var response = await _client.PostAsJsonAsync("/api/products", payload);
+        var response = await _adminClient.PostAsJsonAsync("/api/products", payload);
         var body = await ParseBody(response);
         return body.GetProperty("data").GetProperty("id").GetInt64();
     }

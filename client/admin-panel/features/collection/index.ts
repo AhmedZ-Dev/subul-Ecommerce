@@ -41,3 +41,29 @@ export {
   collectionListingParsers,
   collectionListingSearchParamsCache,
 } from './search-params';
+
+// ── Collection Products ───────────────────────────────────────────────────────
+export type { CollectionProductInfo, CollectionProductQueryParams } from './types';
+export {
+  collectionProductKeys,
+  useCollectionProducts,
+  useCollectionProduct,
+} from './hooks/useCollectionProduct';
+export {
+  useAddCollectionProduct,
+  useUpdateCollectionProduct,
+  useDeleteCollectionProduct,
+} from './hooks/useCollectionProductMutations';
+export {
+  addCollectionProductSchema,
+  updateCollectionProductSchema,
+} from './schemas/collection-product.schema';
+export type {
+  AddCollectionProductInput,
+  UpdateCollectionProductInput,
+} from './schemas/collection-product.schema';
+export {
+  getCollectionProducts,
+  getCollectionProductById,
+  addCollectionProduct,
+} from './api/collection-product.api';

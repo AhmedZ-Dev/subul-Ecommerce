@@ -24,29 +24,10 @@ public class GetByIdCollectionHandler(AppDbContext context)
         if (collection is null)
             return Result<GetByIdCollectionResponse>.Failure("Collection not found");
 
-        var productsResponse = new List<CollectionProductResponse>();
-        if (collection.CollectionProducts.Count > 0)
-        {
-            var productIds = collection.CollectionProducts.Select(cp => cp.ProductId).ToList();
-            var productsInfo = await context.Products
-                .AsNoTracking()
-                .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id, cancellationToken);
-
-            foreach (var cp in collection.CollectionProducts)
-            {
-                if (productsInfo.TryGetValue(cp.ProductId, out var prod))
-                {
-                    productsResponse.Add(new CollectionProductResponse(
-                        prod.Id,
-                        prod.NameEn,
-                        prod.NameAr,
-                        prod.Slug,
-                        prod.Price,
-                        cp.SortOrder));
-                }
-            }
-        }
+        var productsResponse = await MapCollectionProductsAsync(
+            context,
+            collection.CollectionProducts.Select(cp => (cp.ProductId, cp.SortOrder)).ToList(),
+            cancellationToken);
 
         var response = new GetByIdCollectionResponse(
             collection.Id,
@@ -64,8 +45,57 @@ public class GetByIdCollectionHandler(AppDbContext context)
             collection.MetaDescription,
             collection.CreatedAt,
             collection.UpdatedAt,
-            productsResponse.OrderBy(p => p.SortOrder).ToList());
+            productsResponse);
 
         return Result<GetByIdCollectionResponse>.Success(response);
+    }
+
+    internal static async Task<List<CollectionProductResponse>> MapCollectionProductsAsync(
+        AppDbContext context,
+        List<(long ProductId, int SortOrder)> collectionProducts,
+        CancellationToken cancellationToken)
+    {
+        if (collectionProducts.Count == 0)
+            return new List<CollectionProductResponse>();
+
+        var productIds = collectionProducts.Select(cp => cp.ProductId).ToList();
+        var productsInfo = await context.Products
+            .AsNoTracking()
+            .Where(p => productIds.Contains(p.Id))
+            .Select(p => new
+            {
+                p.Id,
+                p.NameEn,
+                p.NameAr,
+                p.Slug,
+                p.Price,
+                p.Currency,
+                PrimaryImageUrl = context.ProductImages
+                    .Where(pi => pi.ProductId == p.Id)
+                    .OrderByDescending(pi => pi.IsPrimary)
+                    .ThenBy(pi => pi.SortOrder)
+                    .Select(pi => pi.ImageUrl)
+                    .FirstOrDefault(),
+            })
+            .ToDictionaryAsync(p => p.Id, cancellationToken);
+
+        var productsResponse = new List<CollectionProductResponse>();
+        foreach (var (productId, sortOrder) in collectionProducts.OrderBy(cp => cp.SortOrder))
+        {
+            if (!productsInfo.TryGetValue(productId, out var prod))
+                continue;
+
+            productsResponse.Add(new CollectionProductResponse(
+                prod.Id,
+                prod.NameEn,
+                prod.NameAr,
+                prod.Slug,
+                prod.Price,
+                prod.Currency,
+                sortOrder,
+                prod.PrimaryImageUrl));
+        }
+
+        return productsResponse;
     }
 }

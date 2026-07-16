@@ -1,6 +1,7 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.PaymentMethodFeature.ListPaymentMethodPaginated;
@@ -10,6 +11,8 @@ namespace backend.Features.PaymentMethodFeature.ListPaymentMethodPaginated;
 [Tags("Payment Methods")]
 public class ListPaymentMethodPaginatedController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront checkout — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ListPaymentMethodPaginatedResponse>>> ListPaymentMethods(
         [FromQuery] ListPaymentMethodPaginatedQuery query)

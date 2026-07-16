@@ -1,6 +1,7 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.BrandFeature.ListBrandPaginated;
@@ -10,6 +11,8 @@ namespace backend.Features.BrandFeature.ListBrandPaginated;
 [Tags("Brands")]
 public class ListBrandPaginatedController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront catalog filters — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ListBrandPaginatedResponse>>> ListBrands(
         [FromQuery] ListBrandPaginatedQuery query)

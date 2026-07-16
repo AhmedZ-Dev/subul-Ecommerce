@@ -11,6 +11,7 @@ public class OrderIntegrationTests : IAsyncLifetime
     private readonly DatabaseFixture _fixture;
     private TestWebApplicationFactory _factory = null!;
     private HttpClient _client = null!;
+    private HttpClient _adminClient = null!;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -22,16 +23,18 @@ public class OrderIntegrationTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new TestWebApplicationFactory(_fixture.ConnectionString);
         _client = _factory.CreateClient();
-        return Task.CompletedTask;
+        await using var context = _fixture.CreateContext();
+        _adminClient = await AuthTestHelper.CreateAuthenticatedClientAsync(_factory, context);
     }
 
     public async Task DisposeAsync()
     {
         _client.Dispose();
+        _adminClient.Dispose();
         await _factory.DisposeAsync();
     }
 
@@ -133,7 +136,7 @@ public class OrderIntegrationTests : IAsyncLifetime
         var orderBody = await ParseBody(orderResponse);
         var orderId = orderBody.GetProperty("data").GetProperty("id").GetInt64();
 
-        var getResponse = await _client.GetAsync($"/api/orders/{orderId}");
+        var getResponse = await _adminClient.GetAsync($"/api/orders/{orderId}");
         var getBody = await ParseBody(getResponse);
 
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
@@ -169,7 +172,7 @@ public class OrderIntegrationTests : IAsyncLifetime
         var orderBody = await ParseBody(orderResponse);
         var orderId = orderBody.GetProperty("data").GetProperty("id").GetInt64();
 
-        var itemsResponse = await _client.GetAsync($"/api/orders/{orderId}/items");
+        var itemsResponse = await _adminClient.GetAsync($"/api/orders/{orderId}/items");
         var itemsBody = await ParseBody(itemsResponse);
 
         Assert.Equal(HttpStatusCode.OK, itemsResponse.StatusCode);
@@ -187,7 +190,7 @@ public class OrderIntegrationTests : IAsyncLifetime
             stockQuantity = 10
         };
 
-        var response = await _client.PostAsJsonAsync("/api/products", payload);
+        var response = await _adminClient.PostAsJsonAsync("/api/products", payload);
         var body = await ParseBody(response);
         return body.GetProperty("data").GetProperty("id").GetInt64();
     }
@@ -210,7 +213,7 @@ public class OrderIntegrationTests : IAsyncLifetime
             }
         };
 
-        var response = await _client.PostAsJsonAsync("/api/shipping-zones", payload);
+        var response = await _adminClient.PostAsJsonAsync("/api/shipping-zones", payload);
         var body = await ParseBody(response);
         return body.GetProperty("data").GetProperty("id").GetInt64();
     }

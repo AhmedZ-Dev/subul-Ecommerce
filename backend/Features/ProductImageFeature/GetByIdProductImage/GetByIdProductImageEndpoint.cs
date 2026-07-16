@@ -2,6 +2,7 @@ using backend.Common.Extensions;
 using backend.Common.Responses;
 using backend.Features.ProductImageFeature.CreateProductImage;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.ProductImageFeature.GetByIdProductImage;
@@ -11,6 +12,8 @@ namespace backend.Features.ProductImageFeature.GetByIdProductImage;
 [Tags("Product Images")]
 public class GetByIdProductImageController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront product gallery — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ProductImageResponse>>> GetByIdProductImage(
         long productId,

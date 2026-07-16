@@ -1,6 +1,7 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.ShippingZoneFeature.ListShippingZonePaginated;
@@ -10,6 +11,8 @@ namespace backend.Features.ShippingZoneFeature.ListShippingZonePaginated;
 [Tags("ShippingZones")]
 public class ListShippingZonePaginatedController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront checkout — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ListShippingZonePaginatedResponse>>> ListShippingZonePaginated(
         [FromQuery] ListShippingZonePaginatedQuery query)

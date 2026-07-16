@@ -17,11 +17,11 @@ public class PaymentMethodIntegrationTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new TestWebApplicationFactory(_fixture.ConnectionString);
-        _client = _factory.CreateClient();
-        return Task.CompletedTask;
+        await using var context = _fixture.CreateContext();
+        _client = await AuthTestHelper.CreateAuthenticatedClientAsync(_factory, context);
     }
 
     public async Task DisposeAsync()
@@ -136,6 +136,28 @@ public class PaymentMethodIntegrationTests : IAsyncLifetime
     public async Task DELETE_PaymentMethods_NonExistentId_Returns404()
     {
         var response = await _client.DeleteAsync("/api/payment-methods/999999999");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PUT_PaymentMethods_Status_Deactivate_Returns200()
+    {
+        var created = await CreatePaymentMethodAsync();
+        var id = created.GetProperty("data").GetProperty("id").GetInt64();
+
+        var response = await _client.PutAsJsonAsync($"/api/payment-methods/{id}/status", new { isActive = false });
+        var body = await ParseBody(response);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(body.GetProperty("success").GetBoolean());
+        Assert.False(body.GetProperty("data").GetProperty("isActive").GetBoolean());
+    }
+
+    [Fact]
+    public async Task PUT_PaymentMethods_Status_NonExistentId_Returns404()
+    {
+        var response = await _client.PutAsJsonAsync("/api/payment-methods/999999999/status", new { isActive = false });
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

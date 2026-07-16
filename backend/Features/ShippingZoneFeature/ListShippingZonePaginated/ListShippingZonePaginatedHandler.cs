@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using backend.Common.Results;
@@ -60,21 +58,14 @@ public class ListShippingZonePaginatedHandler(AppDbContext context)
             })
             .ToListAsync(cancellationToken);
 
-        var items = rawItems.Select(z =>
-        {
-            var governorates = string.IsNullOrWhiteSpace(z.Governorates)
-                ? new List<string>()
-                : JsonSerializer.Deserialize<List<string>>(z.Governorates) ?? new List<string>();
-
-            return new ListShippingZonePaginatedItemResponse(
+        var items = rawItems.Select(z => new ListShippingZonePaginatedItemResponse(
                 z.Id,
                 z.NameEn,
                 z.NameAr,
-                governorates,
+                ShippingZoneGovernorates.Parse(z.Governorates),
                 z.IsActive,
                 z.CreatedAt,
-                z.ShippingRateCount);
-        }).ToList();
+                z.ShippingRateCount)).ToList();
 
         var response = new ListShippingZonePaginatedResponse(
             items,

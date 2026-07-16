@@ -43,3 +43,25 @@ export interface CollectionQueryParams {
   sortBy?: 'nameEn' | 'createdAt' | 'sortOrder';
   sortOrder?: 'asc' | 'desc';
 }
+
+export interface CollectionProductInfo {
+  id: number;
+  collectionId: number;
+  productId: number;
+  sortOrder: number;
+  createdAt: string;
+  product: {
+    nameEn: string;
+    nameAr: string | null;
+    slug: string;
+    price: number;
+  };
+}
+
+export interface CollectionProductQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sortBy?: 'sortOrder' | 'createdAt';
+  sortOrder?: 'asc' | 'desc';
+}

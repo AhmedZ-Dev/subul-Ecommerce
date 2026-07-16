@@ -1,3 +1,4 @@
+using backend.Common.Auth;
 using backend.Common.Behaviors;
 using backend.Common.Storage;
 using backend.Infrastructure.Persistence;
@@ -32,6 +33,8 @@ public static class ServiceCollectionExtensions
             options.UseNpgsql(connectionString));
 
         services.Configure<ImageStorageOptions>(configuration.GetSection(ImageStorageOptions.SectionName));
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
+        services.AddSingleton<JwtTokenService>();
         services.AddSingleton<IImageStorageService, LocalImageStorageService>();
 
         return services;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using backend.Common.Results;
@@ -34,7 +33,7 @@ public class CreateShippingZoneHandler(AppDbContext context)
             return Result<CreateShippingZoneResponse>.Failure("Shipping zone name already exists");
 
         var governoratesJson = command.Governorates is not null
-            ? JsonSerializer.Serialize(command.Governorates)
+            ? ShippingZoneGovernorates.Serialize(command.Governorates)
             : null;
 
         var now = DateTime.Now;

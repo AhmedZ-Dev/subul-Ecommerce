@@ -25,7 +25,7 @@ public class GetByIdProductHandler(AppDbContext context)
             return Result<GetByIdProductResponse>.Failure("Product not found");
 
         ProductCategoryInfo? categoryInfo = product.Category is not null
-            ? new ProductCategoryInfo(product.Category.Id, product.Category.NameEn, product.Category.NameAr)
+            ? new ProductCategoryInfo(product.Category.Id, product.Category.NameEn, product.Category.NameAr, product.Category.Slug)
             : null;
 
         ProductBrandInfo? brandInfo = product.Brand is not null

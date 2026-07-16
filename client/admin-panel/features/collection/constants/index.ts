@@ -7,6 +7,10 @@ export const COLLECTION_QUERY_KEYS = {
   ALL: ['collections'] as const,
 };
 
+export const COLLECTION_PRODUCT_QUERY_KEYS = {
+  ALL: ['collection-products'] as const,
+};
+
 export const COLLECTION_DEFAULT_PAGE_SIZE = 10;
 export const COLLECTION_MAX_PAGE_SIZE = 100;
 

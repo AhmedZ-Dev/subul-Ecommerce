@@ -1,6 +1,7 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.CategoryFeature.GetByIdCategory;
@@ -10,6 +11,8 @@ namespace backend.Features.CategoryFeature.GetByIdCategory;
 [Tags("Categories")]
 public class GetByIdCategoryController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront catalog — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<GetByIdCategoryResponse>>> GetByIdCategory(long id)
     {

@@ -42,7 +42,7 @@ public record GetByIdProductResponse(
     List<ProductVariantInfo> Variants,
     List<ProductAttributeValueInfo> AttributeValues);
 
-public record ProductCategoryInfo(long Id, string NameEn, string? NameAr);
+public record ProductCategoryInfo(long Id, string NameEn, string? NameAr, string Slug);
 
 public record ProductBrandInfo(long Id, string Name, string Slug);
 

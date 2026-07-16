@@ -1,6 +1,7 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.BrandFeature.GetByIdBrand;
@@ -10,6 +11,8 @@ namespace backend.Features.BrandFeature.GetByIdBrand;
 [Tags("Brands")]
 public class GetByIdBrandController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront catalog — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<GetByIdBrandResponse>>> GetByIdBrand(long id)
     {

@@ -11,6 +11,7 @@ public record CartItemResponse(
     long? VariantId,
     string ProductNameEn,
     string? ProductNameAr,
+    string ProductSlug,
     string? Sku,
     int Quantity,
     decimal UnitPrice,

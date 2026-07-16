@@ -42,6 +42,7 @@ import { useCollection } from '../../hooks/useCollection';
 import { useDeleteCollection } from '../../hooks/useCollectionMutations';
 import { CollectionStatusBadge } from '../blocks/collection-status-badge';
 import { CollectionTypeBadge } from '../blocks/collection-type-badge';
+import { CollectionProductSection } from '../blocks/collection-product-section';
 
 function DetailField({
   label,
@@ -283,6 +284,8 @@ export function CollectionView({ collection }: CollectionViewProps) {
             </CardContent>
           </Card>
         </div>
+
+        <CollectionProductSection collectionId={current.id} />
       </div>
 
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

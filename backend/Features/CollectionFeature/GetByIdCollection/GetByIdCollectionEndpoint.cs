@@ -1,6 +1,7 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.CollectionFeature.GetByIdCollection;
@@ -10,6 +11,8 @@ namespace backend.Features.CollectionFeature.GetByIdCollection;
 [Tags("Collections")]
 public class GetByIdCollectionController(ISender sender) : ControllerBase
 {
+    /// <summary>Storefront catalog — must remain [AllowAnonymous].</summary>
+    [AllowAnonymous]
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResponse<GetByIdCollectionResponse>>> GetByIdCollection(long id)
     {

@@ -31,4 +31,6 @@ public record CollectionProductResponse(
     string? NameAr,
     string Slug,
     decimal Price,
-    int SortOrder);
+    string Currency,
+    int SortOrder,
+    string? PrimaryImageUrl);

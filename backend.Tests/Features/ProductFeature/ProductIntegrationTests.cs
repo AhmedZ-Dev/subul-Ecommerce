@@ -22,11 +22,11 @@ public class ProductIntegrationTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new TestWebApplicationFactory(_fixture.ConnectionString);
-        _client = _factory.CreateClient();
-        return Task.CompletedTask;
+        await using var context = _fixture.CreateContext();
+        _client = await AuthTestHelper.CreateAuthenticatedClientAsync(_factory, context);
     }
 
     public async Task DisposeAsync()
@@ -123,6 +123,36 @@ public class ProductIntegrationTests : IAsyncLifetime
         Assert.True(data.TryGetProperty("page", out _));
         Assert.True(data.TryGetProperty("limit", out _));
         Assert.True(data.TryGetProperty("totalPages", out _));
+    }
+
+    [Fact]
+    public async Task GET_Products_FilterOptions_Returns200WithFacets()
+    {
+        var response = await _client.GetAsync("/api/products/filter-options");
+        var body = await ParseBody(response);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(body.GetProperty("success").GetBoolean());
+
+        var data = body.GetProperty("data");
+        Assert.True(data.TryGetProperty("brands", out var brands));
+        Assert.True(data.TryGetProperty("priceRange", out var priceRange));
+        Assert.True(data.TryGetProperty("attributeGroups", out var attributeGroups));
+        Assert.Equal(JsonValueKind.Array, brands.ValueKind);
+        Assert.True(priceRange.TryGetProperty("min", out _));
+        Assert.True(priceRange.TryGetProperty("max", out _));
+        Assert.Equal(JsonValueKind.Array, attributeGroups.ValueKind);
+    }
+
+    [Fact]
+    public async Task GET_Products_List_WithAdvancedFilters_Returns200()
+    {
+        var response = await _client.GetAsync(
+            "/api/products?status=active&minPrice=100&maxPrice=5000&inStockOnly=true&page=1&limit=5");
+        var body = await ParseBody(response);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(body.GetProperty("success").GetBoolean());
     }
 
     [Fact]

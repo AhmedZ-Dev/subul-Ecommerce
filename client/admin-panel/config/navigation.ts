@@ -4,6 +4,10 @@ import {
   SearchIcon,
   DatabaseIcon,
   TagIcon,
+  ShoppingBagIcon,
+  ClipboardListIcon,
+  TruckIcon,
+  CreditCardIcon,
 } from "lucide-react"
 import { messages } from "@/lib/messages.ar"
 
@@ -40,6 +44,30 @@ export const navMain = [
     title: messages.nav.collections,
     url: "/collections",
     icon: FolderIcon, // We can use FolderIcon or another suitable one
+  },
+  {
+    id: "shippingZones",
+    title: messages.nav.shippingZones,
+    url: "/shipping-zones",
+    icon: TruckIcon,
+  },
+  {
+    id: "orders",
+    title: messages.nav.orders,
+    url: "/orders",
+    icon: ClipboardListIcon,
+  },
+  {
+    id: "paymentMethods",
+    title: messages.nav.paymentMethods,
+    url: "/payment-methods",
+    icon: CreditCardIcon,
+  },
+  {
+    id: "products",
+    title: messages.nav.products,
+    url: "/products",
+    icon: ShoppingBagIcon,
   },
 ] as const
 
@@ -104,5 +132,26 @@ export const kbarQuickActions = [
     url: "/collections/new",
     section: messages.kbar.sectionActions,
     subtitle: messages.kbar.addCollectionSubtitle,
+  },
+  {
+    id: "add-shipping-zone",
+    name: messages.kbar.addShippingZone,
+    url: "/shipping-zones/new",
+    section: messages.kbar.sectionActions,
+    subtitle: messages.kbar.addShippingZoneSubtitle,
+  },
+  {
+    id: "add-product",
+    name: messages.kbar.addProduct,
+    url: "/products/new",
+    section: messages.kbar.sectionActions,
+    subtitle: messages.kbar.addProductSubtitle,
+  },
+  {
+    id: "add-payment-method",
+    name: messages.kbar.addPaymentMethod,
+    url: "/payment-methods/new",
+    section: messages.kbar.sectionActions,
+    subtitle: messages.kbar.addPaymentMethodSubtitle,
   },
 ] as const

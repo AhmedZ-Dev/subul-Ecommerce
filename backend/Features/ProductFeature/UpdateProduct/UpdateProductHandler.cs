@@ -184,7 +184,7 @@ public class UpdateProductHandler(AppDbContext context)
             product.CreatedAt,
             product.UpdatedAt,
             category is not null
-                ? new ProductCategoryInfo(category.Id, category.NameEn, category.NameAr)
+                ? new ProductCategoryInfo(category.Id, category.NameEn, category.NameAr, category.Slug)
                 : null,
             brand is not null
                 ? new ProductBrandInfo(brand.Id, brand.Name, brand.Slug)

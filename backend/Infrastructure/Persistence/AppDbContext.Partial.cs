@@ -71,5 +71,13 @@ public partial class AppDbContext
         modelBuilder.Entity<User>()
             .Property(e => e.Id)
             .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<PaymentMethod>()
+            .Property(e => e.Id)
+            .ValueGeneratedOnAdd();
+
+        modelBuilder.Entity<AdminUser>()
+            .Property(e => e.Id)
+            .ValueGeneratedOnAdd();
     }
 }

@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "brand": "Subul Ecommerce Storefront",
+  "lastUpdated": "2026-07-09",
+  "guidelines": "docs/brand-guidelines.md",
+  "tokens": {
+    "json": "assets/design-tokens.json",
+    "css": "assets/design-tokens.css"
+  },
+  "assets": [
+    {
+      "id": "logo-icon",
+      "path": "public/assets/logo_subul-brand_icon_20260709_default.svg",
+      "type": "logo",
+      "campaign": "subul-brand",
+      "description": "icon",
+      "dimensions": "64x64",
+      "status": "approved"
+    },
+    {
+      "id": "hero-banner",
+      "path": "public/assets/banner_subul-home_hero-image_20260709_default.svg",
+      "type": "banner",
+      "campaign": "subul-home",
+      "description": "hero-image",
+      "dimensions": "1920x600",
+      "status": "approved"
+    },
+    {
+      "id": "category-banner",
+      "path": "public/assets/banner_subul-category_header-image_20260709_default.svg",
+      "type": "banner",
+      "campaign": "subul-category",
+      "description": "header-image",
+      "dimensions": "1200x300",
+      "status": "approved"
+    },
+    {
+      "id": "icon-cart",
+      "path": "public/assets/icon_subul-storefront_cart_20260709_default.svg",
+      "type": "icon",
+      "campaign": "subul-storefront",
+      "description": "cart",
+      "dimensions": "24x24",
+      "status": "approved"
+    },
+    {
+      "id": "icon-search",
+      "path": "public/assets/icon_subul-storefront_search_20260709_default.svg",
+      "type": "icon",
+      "campaign": "subul-storefront",
+      "description": "search",
+      "dimensions": "24x24",
+      "status": "approved"
+    },
+    {
+      "id": "icon-truck",
+      "path": "public/assets/icon_subul-storefront_truck_20260709_default.svg",
+      "type": "icon",
+      "campaign": "subul-storefront",
+      "description": "truck",
+      "dimensions": "24x24",
+      "status": "approved"
+    }
+  ]
+}

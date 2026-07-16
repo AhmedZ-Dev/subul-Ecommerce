@@ -58,7 +58,7 @@ export default function RootLayout({
         fontMono.variable
       )}
     >
-      <body>
+      <body suppressHydrationWarning>
         <NuqsAdapter>
           <AppProviders>{children}</AppProviders>
         </NuqsAdapter>

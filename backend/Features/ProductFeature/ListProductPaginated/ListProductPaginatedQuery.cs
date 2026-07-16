@@ -9,8 +9,13 @@ public record ListProductPaginatedQuery(
     string? Search = null,
     long? CategoryId = null,
     long? BrandId = null,
+    List<long>? BrandIds = null,
     string? Status = null,
     bool? IsFeatured = null,
+    decimal? MinPrice = null,
+    decimal? MaxPrice = null,
+    bool? InStockOnly = null,
+    string? Attrs = null,
     string? SortBy = "createdAt",
     string? SortOrder = "desc") : IRequest<Result<ListProductPaginatedResponse>>;
 
@@ -43,8 +48,9 @@ public record ListProductPaginatedItemResponse(
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     ProductCategoryInfo? Category,
-    ProductBrandInfo? Brand);
+    ProductBrandInfo? Brand,
+    string? PrimaryImageUrl = null);
 
-public record ProductCategoryInfo(long Id, string NameEn, string? NameAr);
+public record ProductCategoryInfo(long Id, string NameEn, string? NameAr, string Slug);
 
 public record ProductBrandInfo(long Id, string Name, string Slug);

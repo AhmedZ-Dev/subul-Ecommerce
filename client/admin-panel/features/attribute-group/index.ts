@@ -20,6 +20,7 @@ export type {
   AttributeGroupDto,
   AttributeGroupListItem,
   AttributeGroupQueryParams,
+  AttributeDto,
 } from './types';
 
 // ── Schemas + inferred types ──────────────────────────────────────────────────

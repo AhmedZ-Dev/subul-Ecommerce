@@ -99,6 +99,7 @@ public class GetCartHandler(AppDbContext context)
                 ci.VariantId,
                 ci.Product.NameEn,
                 ci.Product.NameAr,
+                ci.Product.Slug,
                 ci.Variant?.Sku ?? ci.Product.Sku,
                 ci.Quantity,
                 unitPrice,

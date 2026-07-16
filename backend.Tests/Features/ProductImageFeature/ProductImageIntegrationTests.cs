@@ -18,11 +18,11 @@ public class ProductImageIntegrationTests : IAsyncLifetime
         _fixture = fixture;
     }
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new TestWebApplicationFactory(_fixture.ConnectionString);
-        _client = _factory.CreateClient();
-        return Task.CompletedTask;
+        await using var context = _fixture.CreateContext();
+        _client = await AuthTestHelper.CreateAuthenticatedClientAsync(_factory, context);
     }
 
     public async Task DisposeAsync()

@@ -35,6 +35,9 @@ public static class ResultExtensions
         if (error.Contains("not found", StringComparison.OrdinalIgnoreCase))
             return StatusCodes.Status404NotFound;
 
+        if (error.Contains("unauthorized", StringComparison.OrdinalIgnoreCase))
+            return StatusCodes.Status401Unauthorized;
+
         if (error.Contains("already exists", StringComparison.OrdinalIgnoreCase))
             return StatusCodes.Status409Conflict;
 

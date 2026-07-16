@@ -1112,7 +1112,7 @@ Entity: `backend/Domain/Entities/ShippingZone.cs`
 | `id` | long | no |  |
 | `name_en` | string | no |  |
 | `name_ar` | string | yes |  |
-| `governorates` | string | yes |  |
+| `governorates` | string | yes | JSON array of strings, e.g. `["Baghdad"]` |
 | `is_active` | bool | no |  |
 | `created_at` | DateTime | no |  |
 

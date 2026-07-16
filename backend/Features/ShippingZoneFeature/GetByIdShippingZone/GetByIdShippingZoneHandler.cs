@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using backend.Common.Results;
@@ -25,9 +23,7 @@ public class GetByIdShippingZoneHandler(AppDbContext context)
         if (zone is null)
             return Result<GetByIdShippingZoneResponse>.Failure("Shipping zone not found");
 
-        var governorates = string.IsNullOrWhiteSpace(zone.Governorates)
-            ? new List<string>()
-            : JsonSerializer.Deserialize<List<string>>(zone.Governorates) ?? new List<string>();
+        var governorates = ShippingZoneGovernorates.Parse(zone.Governorates);
 
         var mappedRates = zone.ShippingRates.Select(r => new GetByIdShippingRateResponse(
             r.Id,

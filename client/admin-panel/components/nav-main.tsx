@@ -31,12 +31,12 @@ export function NavMain({
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              tooltip={messages.kbar.addCategory}
+              tooltip={messages.kbar.addProduct}
               className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
             >
-              <Link href="/categories/new">
+              <Link href="/products/new">
                 <CirclePlusIcon />
-                <span>{messages.nav.quickCreate}</span>
+                <span>{messages.kbar.addProduct}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
