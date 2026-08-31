@@ -16,6 +16,19 @@ export const metadata: Metadata = {
   },
   description: `لوحة تحكم الإدارة لـ${companyName}`,
   applicationName: companyName,
+  icons: {
+    icon: [
+      {
+        url: "/assets/logo_subul-brand_full_20260829_black.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/assets/logo_subul-brand_full_20260829_white.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+    apple: "/assets/logo_subul-brand_full_20260829_black.png",
+  },
 }
 
 const fontSans = localFont({

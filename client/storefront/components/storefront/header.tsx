@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -35,9 +36,25 @@ export function StorefrontHeader() {
 
         <Link
           href="/"
-          className="text-primary min-w-0 truncate text-base font-bold md:text-lg"
+          className="flex min-w-0 shrink-0 items-center gap-2"
         >
-          {messages.common.companyName}
+          <Image
+            src="/assets/logo_subul-brand_full_20260829_black.png"
+            alt=""
+            width={32}
+            height={32}
+            className="size-7 shrink-0 object-contain dark:hidden md:size-8"
+          />
+          <Image
+            src="/assets/logo_subul-brand_full_20260829_white.png"
+            alt=""
+            width={32}
+            height={32}
+            className="hidden size-7 shrink-0 object-contain dark:block md:size-8"
+          />
+          <span className="text-primary min-w-0 truncate text-base font-bold md:text-lg">
+            {messages.common.companyName}
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">

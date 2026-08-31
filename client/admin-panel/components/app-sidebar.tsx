@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import Link from "next/link"
-import { CommandIcon } from "lucide-react"
 import { useKBar } from "kbar"
 
 import { NavMain } from "@/components/nav-main"
@@ -45,7 +45,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <Link href="/dashboard">
-                <CommandIcon className="size-5!" />
+                <Image
+                  src="/assets/logo_subul-brand_full_20260829_black.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="size-5! shrink-0 object-contain dark:hidden"
+                />
+                <Image
+                  src="/assets/logo_subul-brand_full_20260829_white.png"
+                  alt=""
+                  width={20}
+                  height={20}
+                  className="hidden size-5! shrink-0 object-contain dark:block"
+                />
                 <span className="text-base font-semibold">
                   {messages.common.companyName}
                 </span>

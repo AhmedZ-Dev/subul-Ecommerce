@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
       {
         pathname: "/img/**",
       },
+      {
+        pathname: "/assets/**",
+      },
     ],
     dangerouslyAllowLocalIP: true,
     remotePatterns: [

@@ -1,3 +1,4 @@
+import Image from "next/image"
 import Link from "next/link"
 import { Package, Truck } from "lucide-react"
 import { messages } from "@/lib/messages.ar"
@@ -13,7 +14,20 @@ export function StorefrontFooter() {
       <div className="container mx-auto px-4 py-10 md:px-6">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
-            <p className="text-primary text-lg font-bold">{messages.common.companyName}</p>
+            <Image
+              src="/assets/logo_subul-brand_full_20260829_black.png"
+              alt={messages.common.companyName}
+              width={56}
+              height={56}
+              className="size-14 object-contain dark:hidden"
+            />
+            <Image
+              src="/assets/logo_subul-brand_full_20260829_white.png"
+              alt={messages.common.companyName}
+              width={56}
+              height={56}
+              className="hidden size-14 object-contain dark:block"
+            />
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
               {messages.storefront.description}
             </p>

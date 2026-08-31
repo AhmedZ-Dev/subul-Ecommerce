@@ -17,8 +17,17 @@ export const metadata: Metadata = {
   description: `تسوق أونلاين من ${companyName}`,
   applicationName: companyName,
   icons: {
-    icon: "/assets/logo_subul-brand_icon_20260709_default.svg",
-    apple: "/assets/logo_subul-brand_icon_20260709_default.svg",
+    icon: [
+      {
+        url: "/assets/logo_subul-brand_full_20260829_black.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/assets/logo_subul-brand_full_20260829_white.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+    apple: "/assets/logo_subul-brand_full_20260829_black.png",
   },
 }
 
