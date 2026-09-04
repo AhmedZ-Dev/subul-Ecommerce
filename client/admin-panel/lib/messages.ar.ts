@@ -94,6 +94,7 @@ export const messages = {
     collections: "المجموعات",
     shippingZones: "مناطق الشحن",
     products: "المنتجات",
+    guide: "دليل الاستخدام",
     orders: "الطلبات",
     paymentMethods: "طرق الدفع",
     dataLibrary: "مكتبة البيانات",

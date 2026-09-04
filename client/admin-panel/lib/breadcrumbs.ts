@@ -15,6 +15,10 @@ export function getBreadcrumbs(pathname: string): BreadcrumbItem[] {
     return [home, { label: messages.nav.dashboard }];
   }
 
+  if (pathname === '/guide') {
+    return [home, { label: messages.nav.guide }];
+  }
+
   if (pathname === '/categories') {
     return [home, { label: messages.nav.categories }];
   }

@@ -5,6 +5,7 @@ import {
   DatabaseIcon,
   TagIcon,
   ShoppingBagIcon,
+  BookOpenIcon,
   ClipboardListIcon,
   TruckIcon,
   CreditCardIcon,
@@ -68,6 +69,12 @@ export const navMain = [
     title: messages.nav.products,
     url: "/products",
     icon: ShoppingBagIcon,
+  },
+  {
+    id: "guide",
+    title: messages.nav.guide,
+    url: "/guide",
+    icon: BookOpenIcon,
   },
 ] as const
 
