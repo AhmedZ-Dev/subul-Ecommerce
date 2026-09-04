@@ -8,16 +8,20 @@ import { Search } from "lucide-react"
 import { CartButton } from "@/components/storefront/cart-button"
 import { MobileNav } from "@/components/storefront/mobile-nav"
 import { MobileSearch } from "@/components/storefront/mobile-search"
+import { ThemeToggle } from "@/components/storefront/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useCategoryNav } from "@/features/category"
+import type { CategoryListItem } from "@/features/category"
 import { messages } from "@/lib/messages.ar"
 import { getCategoryName } from "@/lib/messages.ar"
 
-export function StorefrontHeader() {
+interface StorefrontHeaderProps {
+  categories: CategoryListItem[]
+}
+
+export function StorefrontHeader({ categories }: StorefrontHeaderProps) {
   const router = useRouter()
   const [search, setSearch] = useState("")
-  const { data: categories } = useCategoryNav()
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -32,7 +36,7 @@ export function StorefrontHeader() {
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 border-b backdrop-blur">
       <div className="container mx-auto flex h-14 items-center gap-2 px-4 md:h-16 md:gap-4 md:px-6">
-        <MobileNav />
+        <MobileNav categories={categories} />
 
         <Link
           href="/"
@@ -57,11 +61,11 @@ export function StorefrontHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           <Button variant="ghost" size="sm" asChild>
             <Link href="/products">{messages.header.products}</Link>
           </Button>
-          {categories?.slice(0, 6).map((cat) => (
+          {categories.slice(0, 6).map((cat) => (
             <Button key={cat.id} variant="ghost" size="sm" asChild>
               <Link href={`/categories/${cat.slug}`}>
                 {getCategoryName(cat.nameAr, cat.nameEn)}
@@ -75,7 +79,7 @@ export function StorefrontHeader() {
 
           <form
             onSubmit={handleSearch}
-            className="hidden min-w-0 max-w-sm flex-1 items-center md:flex"
+            className="hidden min-w-0 max-w-sm flex-1 items-center lg:flex"
           >
             <div className="relative w-full">
               <Search className="text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2" />
@@ -87,6 +91,8 @@ export function StorefrontHeader() {
               />
             </div>
           </form>
+
+          <ThemeToggle />
 
           <CartButton />
         </div>

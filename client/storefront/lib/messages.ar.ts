@@ -20,6 +20,7 @@ export const messages = {
     yes: "نعم",
     no: "لا",
     loading: "جاري التحميل…",
+    retry: "إعادة المحاولة",
     back: "رجوع",
     home: "الرئيسية",
   },
@@ -91,11 +92,6 @@ export const messages = {
       value: "+964 774 802 5119",
       href: "https://wa.me/9647748025119",
     },
-    phone: {
-      label: "اتصل بنا",
-      value: "6543",
-      href: "tel:6543",
-    },
     email: {
       label: "راسلنا",
       value: "store@subul.com",
@@ -139,6 +135,9 @@ export const messages = {
     productCount: (count: number) => (count === 1 ? "منتج واحد" : `${count} منتجات`),
     trackOrder: "تتبع طلب",
   },
+  theme: {
+    toggle: "تبديل المظهر (فاتح / داكن)",
+  },
   header: {
     searchPlaceholder: "ابحث عن منتج…",
     cart: "السلة",
@@ -147,10 +146,28 @@ export const messages = {
     collections: "المجموعات",
     menu: "القائمة",
   },
+  // TODO: placeholder company copy — replace with the real "About us" content.
+  about: {
+    title: "من نحن",
+    subtitle: "نبذة عن سبُل المستقبل",
+    body: [
+      "سبُل المستقبل شركة عراقية متخصصة في توريد وتركيب الأقفال الذكية وأنظمة التحكم بالدخول للمنازل والمكاتب والمنشآت التجارية.",
+      "نعمل مع علامات تجارية عالمية موثوقة، ونوفّر ضماناً رسمياً ودعماً فنياً مباشراً قبل الشراء وبعده.",
+      "يساعدك فريقنا في اختيار الحل المناسب لاحتياجك، ويتولى التركيب والصيانة في مختلف محافظات العراق.",
+    ],
+    facts: [
+      { label: "سنة التأسيس", value: "2018" },
+      { label: "المقر الرئيسي", value: "بغداد — العراق" },
+      { label: "مجال العمل", value: "الأقفال الذكية وأنظمة التحكم بالدخول" },
+      { label: "التغطية", value: "توصيل وتركيب في جميع المحافظات" },
+    ],
+    close: "إغلاق",
+  },
   footer: {
     quickLinks: "روابط سريعة",
     trackOrder: "تتبع الطلب",
     allProducts: "جميع المنتجات",
+    about: "من نحن",
     copyright: (year: number) => `© ${year} سبُل المستقبل. جميع الحقوق محفوظة.`,
   },
   product: {
@@ -163,6 +180,8 @@ export const messages = {
     viewDetails: "عرض التفاصيل",
     noProducts: "لا توجد منتجات",
     noProductsDescription: "لم نعثر على منتجات تطابق بحثك.",
+    loadError: "تعذّر تحميل المنتجات",
+    loadErrorDescription: "حدث خطأ أثناء جلب المنتجات. تحقق من اتصالك ثم حاول مرة أخرى.",
     filters: {
       title: "الفلاتر",
       search: "بحث",
@@ -175,6 +194,8 @@ export const messages = {
       priceMax: "الحد الأعلى",
       inStockOnly: "متوفر فقط",
       clearAll: "مسح الكل",
+      clearFilters: "مسح الفلاتر والبحث",
+      removeFilter: (label: string) => `إزالة ${label}`,
       noFilters: "لا توجد فلاتر متاحة",
       showResults: "عرض النتائج",
       sort: "الترتيب",
@@ -190,6 +211,7 @@ export const messages = {
       attributes: "المواصفات",
       variants: "الخيارات",
       selectVariant: "اختر خياراً",
+      selectVariantHint: "اختر أحد الخيارات المتاحة لتتمكن من الإضافة إلى السلة",
       quantity: "الكمية",
       minOrder: (qty: number) => `الحد الأدنى للطلب: ${qty}`,
       warranty: (months: number) => `ضمان ${months} شهر`,
@@ -211,6 +233,7 @@ export const messages = {
     listing: {
       title: "التصنيف",
       productsInCategory: "المنتجات في هذا التصنيف",
+      subCategories: "الأقسام الفرعية",
       emptyTitle: "لا توجد منتجات",
       emptyDescription: "لا توجد منتجات في هذا التصنيف حالياً.",
     },
@@ -276,10 +299,12 @@ export const messages = {
       firstName: "الاسم الأول",
       lastName: "اسم العائلة",
       phone: "رقم الهاتف",
-      address1: "العنوان",
+      address1: "العنوان المفصل",
       address2: "تفاصيل إضافية (اختياري)",
-      city: "المدينة",
+      city: "المدينة / القضاء",
+      cityPlaceholder: "مثال: الكرادة",
       governorate: "المحافظة",
+      governoratePlaceholder: "اختر المحافظة",
       shippingZone: "منطقة الشحن",
     },
     validation: {

@@ -11,6 +11,9 @@ COPY . .
 ARG NEXT_PUBLIC_API_URL
 RUN test -n "$NEXT_PUBLIC_API_URL"
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+# Public origin used for canonical and Open Graph URLs.
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 RUN npm run build
 
 FROM node:20-alpine AS runner

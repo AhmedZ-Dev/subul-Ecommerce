@@ -1,5 +1,6 @@
 "use client"
 
+import { useMemo } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Banknote } from "lucide-react"
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useActiveShippingZones } from "@/features/shipping-zone"
+import { IRAQ_GOVERNORATES } from "../../constants"
 import { checkoutSchema, type CheckoutFormValues } from "../../schemas/checkout.schema"
 import { messages } from "@/lib/messages.ar"
 
@@ -32,6 +34,21 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ onSubmit, isSubmitting }: CheckoutFormProps) {
   const { data: zones = [] } = useActiveShippingZones()
+
+  // One governorate picker drives the shipping zone too — the customer should
+  // not have to state the same location twice.
+  const governorateOptions = useMemo(() => {
+    const zoneByGovernorate = new Map<string, number>()
+    for (const zone of zones) {
+      for (const governorate of zone.governorates ?? []) {
+        zoneByGovernorate.set(governorate.trim().toLowerCase(), zone.id)
+      }
+    }
+    return IRAQ_GOVERNORATES.map((item) => ({
+      ...item,
+      zoneId: zoneByGovernorate.get(item.en.toLowerCase()),
+    }))
+  }, [zones])
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
@@ -95,25 +112,51 @@ export function CheckoutForm({ onSubmit, isSubmitting }: CheckoutFormProps) {
             />
             <FormField
               control={form.control}
-              name="city"
+              name="governorate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{messages.checkout.fields.city}</FormLabel>
-                  <FormControl>
-                    <Input {...field} autoComplete="address-level2" />
-                  </FormControl>
+                  <FormLabel>{messages.checkout.fields.governorate}</FormLabel>
+                  <Select
+                    value={field.value || undefined}
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      form.setValue(
+                        "shippingZoneId",
+                        governorateOptions.find((item) => item.ar === value)?.zoneId,
+                      )
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue
+                          placeholder={messages.checkout.fields.governoratePlaceholder}
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {governorateOptions.map((item) => (
+                        <SelectItem key={item.en} value={item.ar}>
+                          {item.ar}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
               control={form.control}
-              name="governorate"
+              name="city"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{messages.checkout.fields.governorate}</FormLabel>
+                  <FormLabel>{messages.checkout.fields.city}</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      {...field}
+                      autoComplete="address-level2"
+                      placeholder={messages.checkout.fields.cityPlaceholder}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -147,36 +190,6 @@ export function CheckoutForm({ onSubmit, isSubmitting }: CheckoutFormProps) {
             />
           </div>
         </div>
-
-        {zones.length > 0 && (
-          <FormField
-            control={form.control}
-            name="shippingZoneId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{messages.checkout.fields.shippingZone}</FormLabel>
-                <Select
-                  value={field.value?.toString() ?? ""}
-                  onValueChange={(v) => field.onChange(v ? Number(v) : undefined)}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder={messages.checkout.fields.shippingZone} />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {zones.map((zone) => (
-                      <SelectItem key={zone.id} value={zone.id.toString()}>
-                        {zone.nameAr ?? zone.nameEn}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
 
         <div className="bg-muted/40 flex items-start gap-3 rounded-2xl border border-foreground/8 p-4">
           <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-xl">

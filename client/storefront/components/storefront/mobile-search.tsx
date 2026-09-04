@@ -36,7 +36,7 @@ export function MobileSearch() {
         <Button
           variant="ghost"
           size="icon"
-          className="size-11 md:hidden"
+          className="size-11 lg:hidden"
           aria-label={messages.header.searchPlaceholder}
         >
           <Search className="size-5" />

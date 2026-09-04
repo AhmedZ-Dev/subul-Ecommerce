@@ -23,6 +23,8 @@ import { productListingParsers } from "../../search-params"
 
 interface ProductSidebarProps {
   categoryId?: number
+  /** Match the listing: facets on a parent category cover its whole subtree. */
+  includeDescendants?: boolean
   className?: string
   /** Use inside mobile Sheet — hides duplicate title and adjusts layout */
   variant?: "default" | "sheet"
@@ -90,6 +92,7 @@ function FilterSection({
 
 export function ProductSidebar({
   categoryId,
+  includeDescendants,
   className,
   variant = "default",
 }: ProductSidebarProps) {
@@ -98,7 +101,12 @@ export function ProductSidebar({
     history: "push",
     shallow: true,
   })
-  const { data: filterOptions, isLoading } = useProductFilterOptions(categoryId)
+  const facetCategoryId = categoryId ?? params.categoryId ?? undefined
+  const { data: filterOptions, isLoading } = useProductFilterOptions(
+    facetCategoryId,
+    params.search,
+    includeDescendants,
+  )
   const { data: categoriesData } = useStorefrontCategories(
     { limit: 100, isActive: true },
     categoryId == null,

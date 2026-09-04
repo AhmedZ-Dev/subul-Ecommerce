@@ -71,6 +71,15 @@ public class GetBySlugProductHandler(AppDbContext context)
                     pav.Attribute.SortOrder)))
             .ToList();
 
+        // Link previews and social cards need the product's own photo.
+        var primaryImageUrl = await context.ProductImages
+            .AsNoTracking()
+            .Where(pi => pi.ProductId == product.Id)
+            .OrderByDescending(pi => pi.IsPrimary)
+            .ThenBy(pi => pi.SortOrder)
+            .Select(pi => pi.ImageUrl)
+            .FirstOrDefaultAsync(cancellationToken);
+
         var response = new GetByIdProductResponse(
             product.Id,
             product.CategoryId,
@@ -106,7 +115,8 @@ public class GetBySlugProductHandler(AppDbContext context)
             categoryInfo,
             brandInfo,
             variants,
-            attributeValues);
+            attributeValues,
+            primaryImageUrl);
 
         return Result<GetByIdProductResponse>.Success(response);
     }

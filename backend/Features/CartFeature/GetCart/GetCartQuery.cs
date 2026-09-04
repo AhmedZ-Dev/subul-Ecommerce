@@ -13,6 +13,7 @@ public record CartItemResponse(
     string? ProductNameAr,
     string ProductSlug,
     string? Sku,
+    string? ImageUrl,
     int Quantity,
     decimal UnitPrice,
     decimal LineTotal);

@@ -105,7 +105,7 @@ export function HeroCarousel() {
                 className="absolute inset-0 flex items-end md:items-center"
                 dir="rtl"
               >
-                <div className="flex w-full max-w-xl flex-col gap-4 px-5 pb-16 pt-10 sm:px-8 sm:pb-14 md:px-10 lg:px-14">
+                <div className="flex w-full max-w-xl flex-col gap-4 px-5 pb-20 pt-10 sm:px-8 sm:pb-14 md:px-10 lg:px-14">
                   <p className="text-xs font-medium tracking-[0.18em] text-white/70 uppercase sm:text-sm">
                     {messages.common.companyName}
                   </p>
@@ -142,7 +142,7 @@ export function HeroCarousel() {
           type="button"
           variant="ghost"
           size="icon"
-          className="pointer-events-auto absolute inset-s-3 top-1/2 size-11 -translate-y-1/2 cursor-pointer rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-md transition-colors hover:bg-black/40 hover:text-white sm:inset-s-4 md:size-12"
+          className="pointer-events-auto absolute inset-s-3 bottom-2.5 size-11 cursor-pointer rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-md transition-colors hover:bg-black/40 hover:text-white sm:inset-s-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 md:size-12"
           onClick={goPrev}
           aria-label={messages.hero.prevSlide}
         >
@@ -152,7 +152,7 @@ export function HeroCarousel() {
           type="button"
           variant="ghost"
           size="icon"
-          className="pointer-events-auto absolute inset-e-3 top-1/2 size-11 -translate-y-1/2 cursor-pointer rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-md transition-colors hover:bg-black/40 hover:text-white sm:inset-e-4 md:size-12"
+          className="pointer-events-auto absolute inset-e-3 bottom-2.5 size-11 cursor-pointer rounded-full border border-white/20 bg-black/25 text-white backdrop-blur-md transition-colors hover:bg-black/40 hover:text-white sm:inset-e-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 md:size-12"
           onClick={goNext}
           aria-label={messages.hero.nextSlide}
         >

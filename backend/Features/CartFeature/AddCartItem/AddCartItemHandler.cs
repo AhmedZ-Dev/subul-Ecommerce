@@ -163,6 +163,8 @@ public class AddCartItemHandler(AppDbContext context)
             .OrderBy(ci => ci.Id)
             .ToListAsync(cancellationToken);
 
+        var imageByProduct = await GetCartHandler.GetPrimaryImagesAsync(context, items, cancellationToken);
+
         var mappedItems = items.Select(ci =>
         {
             var unitPrice = ci.UnitPrice ?? ci.Variant?.Price ?? ci.Product.Price;
@@ -174,6 +176,7 @@ public class AddCartItemHandler(AppDbContext context)
                 ci.Product.NameAr,
                 ci.Product.Slug,
                 ci.Variant?.Sku ?? ci.Product.Sku,
+                imageByProduct.GetValueOrDefault(ci.ProductId),
                 ci.Quantity,
                 unitPrice,
                 unitPrice * ci.Quantity);

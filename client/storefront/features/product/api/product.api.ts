@@ -68,6 +68,7 @@ interface BackendAttributeValueInfo {
 
 interface BackendProductDetail extends BackendProductListItem {
   status: string
+  sku: string | null
   descriptionEn: string | null
   descriptionAr: string | null
   shortDescriptionEn: string | null
@@ -139,6 +140,7 @@ function toAttributeValue(raw: BackendAttributeValueInfo): ProductAttributeValue
 function toDetail(raw: BackendProductDetail): StorefrontProductDetail {
   return {
     ...toListItem(raw),
+    sku: raw.sku ?? null,
     descriptionEn: raw.descriptionEn,
     descriptionAr: raw.descriptionAr,
     shortDescriptionEn: raw.shortDescriptionEn,
@@ -165,6 +167,7 @@ export async function getStorefrontProducts(
     limit = 24,
     search,
     categoryId,
+    includeDescendants,
     brandId,
     brandIds,
     minPrice,
@@ -194,6 +197,7 @@ export async function getStorefrontProducts(
       status: "active",
       ...(search && { search }),
       ...(categoryId != null && { categoryId }),
+      ...(categoryId != null && includeDescendants === true && { includeDescendants: true }),
       ...(hasBrandIds
         ? { brandIds }
         : brandId != null
@@ -253,12 +257,16 @@ interface BackendProductFilterOptions {
 
 export async function getProductFilterOptions(
   categoryId?: number,
+  search?: string,
+  includeDescendants?: boolean,
 ): Promise<ProductFilterOptions> {
   const { data } = await apiClient.get<ApiResponse<BackendProductFilterOptions>>(
     "/products/filter-options",
     {
       params: {
         ...(categoryId != null && { categoryId }),
+        ...(search ? { search } : {}),
+        ...(categoryId != null && includeDescendants === true && { includeDescendants: true }),
       },
     },
   )

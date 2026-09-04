@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Text.Json;
+using backend.Common.Catalog;
 using backend.Common.Results;
 using backend.Infrastructure.Persistence;
 using MediatR;
@@ -32,7 +34,19 @@ public class ListProductPaginatedHandler(AppDbContext context)
         }
 
         if (query.CategoryId is not null)
-            productQuery = productQuery.Where(p => p.CategoryId == query.CategoryId);
+        {
+            if (query.IncludeDescendants)
+            {
+                var categoryIds = await CategoryTree.ResolveAsync(
+                    context, query.CategoryId.Value, cancellationToken);
+                productQuery = productQuery.Where(p =>
+                    p.CategoryId != null && categoryIds.Contains(p.CategoryId.Value));
+            }
+            else
+            {
+                productQuery = productQuery.Where(p => p.CategoryId == query.CategoryId);
+            }
+        }
 
         if (query.BrandIds is { Count: > 0 })
             productQuery = productQuery.Where(p => p.BrandId != null && query.BrandIds.Contains(p.BrandId.Value));
@@ -51,13 +65,29 @@ public class ListProductPaginatedHandler(AppDbContext context)
         var attributeFilters = ParseAttributeFilters(query.Attrs);
         foreach (var (groupId, values) in attributeFilters)
         {
+            // Facets present numbers as strings ("16", "15.6"), so parse them back
+            // and compare as decimals. Formatting the column in C# instead leaves
+            // an expression EF cannot translate, which fails the whole request.
+            var numericValues = values
+                .Select(value =>
+                    decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed)
+                        ? parsed
+                        : (decimal?)null)
+                .Where(value => value is not null)
+                .Select(value => value!.Value)
+                .ToList();
+
+            var textValues = values;
+            var matchesTrue = values.Contains("true", StringComparer.OrdinalIgnoreCase);
+            var matchesFalse = values.Contains("false", StringComparer.OrdinalIgnoreCase);
+
             productQuery = productQuery.Where(p => p.ProductAttributeValues.Any(av =>
                 av.Attribute.GroupId == groupId &&
                 (
-                    (av.ValueText != null && values.Contains(av.ValueText)) ||
-                    (av.ValueNumber != null && values.Contains(FormatNumberValue(av.ValueNumber.Value))) ||
-                    (av.ValueBoolean == true && values.Contains("true")) ||
-                    (av.ValueBoolean == false && values.Contains("false"))
+                    (av.ValueText != null && textValues.Contains(av.ValueText)) ||
+                    (av.ValueNumber != null && numericValues.Contains(av.ValueNumber.Value)) ||
+                    (matchesTrue && av.ValueBoolean == true) ||
+                    (matchesFalse && av.ValueBoolean == false)
                 )));
         }
 
@@ -195,8 +225,4 @@ public class ListProductPaginatedHandler(AppDbContext context)
         }
     }
 
-    private static string FormatNumberValue(decimal value) =>
-        value == decimal.Truncate(value)
-            ? ((long)value).ToString()
-            : value.ToString("0.##");
 }

@@ -17,7 +17,8 @@ public record ListProductPaginatedQuery(
     bool? InStockOnly = null,
     string? Attrs = null,
     string? SortBy = "createdAt",
-    string? SortOrder = "desc") : IRequest<Result<ListProductPaginatedResponse>>;
+    string? SortOrder = "desc",
+    bool IncludeDescendants = false) : IRequest<Result<ListProductPaginatedResponse>>;
 
 public record ListProductPaginatedResponse(
     List<ListProductPaginatedItemResponse> Items,

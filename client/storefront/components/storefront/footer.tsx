@@ -1,6 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Package, Truck } from "lucide-react"
+import { AboutDialog } from "@/components/storefront/about-dialog"
 import { messages } from "@/lib/messages.ar"
 
 export function StorefrontFooter() {
@@ -57,6 +58,7 @@ export function StorefrontFooter() {
             >
               {messages.footer.trackOrder}
             </Link>
+            <AboutDialog />
           </nav>
 
           <div className="flex flex-col justify-end">

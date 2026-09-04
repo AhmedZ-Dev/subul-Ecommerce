@@ -26,7 +26,7 @@ npm run typecheck && npm run build      # the verification gate; there are no fr
 npm run lint
 ```
 
-Full stack via Docker: `docker compose up` (postgres 17 + api + admin + storefront). Requires `POSTGRES_PASSWORD`, `JWT_SECRET`, `AUTH_SECRET` in a `.env`; the Next Dockerfiles fail the build unless `NEXT_PUBLIC_API_URL` is passed as a build arg.
+Full stack via Docker: `docker compose up` (postgres 17 + api + admin + storefront). Requires `POSTGRES_PASSWORD`, `JWT_SECRET`, `AUTH_SECRET` in a `.env`; the Next Dockerfiles fail the build unless `NEXT_PUBLIC_API_URL` is passed as a build arg. The storefront also reads `NEXT_PUBLIC_SITE_URL` (its own public origin) for canonical and Open Graph URLs — optional, defaulting to `http://localhost:3001`, but link previews break if it is wrong in production.
 
 Local dev needs a Postgres matching the `DefaultConnection` in `backend/appsettings.json`, plus a `Jwt:Secret` of at least 32 chars in user-secrets or `appsettings.Development.json` — the app throws at startup otherwise. In Development, `DbSeeder` seeds data on boot.
 

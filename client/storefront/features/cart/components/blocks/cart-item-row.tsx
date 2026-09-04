@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Minus, Package, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { resolveAssetUrl } from "@/lib/asset-url"
 import { getProductName, formatCurrency, messages } from "@/lib/messages.ar"
 import { useRemoveCartItem, useUpdateCartItem } from "../../hooks/useCartMutations"
 import type { CartItem } from "../../types"
@@ -15,14 +17,32 @@ export function CartItemRow({ item }: CartItemRowProps) {
   const updateItem = useUpdateCartItem()
   const removeItem = useRemoveCartItem()
   const name = getProductName(item.productNameAr, item.productNameEn)
+  const imageUrl = resolveAssetUrl(item.imageUrl)
 
   return (
     <div className="flex flex-col gap-4 border-b py-4 sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-start gap-3">
-        <div className="bg-muted relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg">
-          <div className="hero-gradient absolute inset-0 opacity-30" aria-hidden />
-          <Package className="text-muted-foreground relative size-6" aria-hidden />
-        </div>
+        <Link
+          href={`/products/${item.productSlug}`}
+          className="bg-muted relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+          aria-label={name}
+          tabIndex={-1}
+        >
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={name}
+              fill
+              className="object-cover"
+              sizes="64px"
+            />
+          ) : (
+            <>
+              <div className="hero-gradient absolute inset-0 opacity-30" aria-hidden />
+              <Package className="text-muted-foreground relative size-6" aria-hidden />
+            </>
+          )}
+        </Link>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <Link
             href={`/products/${item.productSlug}`}

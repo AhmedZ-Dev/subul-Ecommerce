@@ -6,6 +6,7 @@ export interface CartItem {
   productNameAr: string | null
   productSlug: string
   sku: string | null
+  imageUrl: string | null
   quantity: number
   unitPrice: number
   lineTotal: number

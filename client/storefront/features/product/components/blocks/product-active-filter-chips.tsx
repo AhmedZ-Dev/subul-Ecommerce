@@ -9,16 +9,32 @@ import { getCategoryName, messages } from "@/lib/messages.ar"
 
 interface ProductActiveFilterChipsProps {
   categoryId?: number
+  includeDescendants?: boolean
 }
 
-export function ProductActiveFilterChips({ categoryId }: ProductActiveFilterChipsProps) {
+export function ProductActiveFilterChips({
+  categoryId,
+  includeDescendants,
+}: ProductActiveFilterChipsProps) {
   const [params, setParams] = useQueryStates(productListingParsers, {
     history: "push",
     shallow: true,
   })
-  const { data: filterOptions } = useProductFilterOptions(categoryId)
+  const { data: filterOptions } = useProductFilterOptions(
+    categoryId ?? params.categoryId ?? undefined,
+    params.search,
+    includeDescendants,
+  )
 
   const chips: Array<{ key: string; label: string; onRemove: () => void }> = []
+
+  if (params.search) {
+    chips.push({
+      key: "search",
+      label: `${messages.product.filters.search}: ${params.search}`,
+      onRemove: () => setParams({ search: null, page: 1 }),
+    })
+  }
 
   params.brandIds.forEach((brandId) => {
     const brand = filterOptions?.brands.find((item) => item.id === brandId)
@@ -89,7 +105,7 @@ export function ProductActiveFilterChips({ categoryId }: ProductActiveFilterChip
             type="button"
             className="hover:bg-muted rounded-full p-0.5"
             onClick={chip.onRemove}
-            aria-label={messages.product.filters.clearAll}
+            aria-label={messages.product.filters.removeFilter(chip.label)}
           >
             <X className="size-3" />
           </button>

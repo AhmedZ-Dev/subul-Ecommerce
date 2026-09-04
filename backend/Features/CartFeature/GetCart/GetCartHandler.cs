@@ -77,6 +77,33 @@ public class GetCartHandler(AppDbContext context)
         return cart;
     }
 
+    /// <summary>Primary image per product, shared by every slice that maps a cart.</summary>
+    internal static async Task<Dictionary<long, string?>> GetPrimaryImagesAsync(
+        AppDbContext context,
+        IReadOnlyCollection<CartItem> items,
+        CancellationToken cancellationToken)
+    {
+        var productIds = items.Select(ci => ci.ProductId).Distinct().ToList();
+        if (productIds.Count == 0)
+            return [];
+
+        var rows = await context.ProductImages
+            .AsNoTracking()
+            .Where(pi => productIds.Contains(pi.ProductId))
+            .Select(pi => new { pi.ProductId, pi.IsPrimary, pi.SortOrder, pi.ImageUrl })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .GroupBy(pi => pi.ProductId)
+            .ToDictionary(
+                g => g.Key,
+                g => (string?)g
+                    .OrderByDescending(pi => pi.IsPrimary)
+                    .ThenBy(pi => pi.SortOrder)
+                    .Select(pi => pi.ImageUrl)
+                    .FirstOrDefault());
+    }
+
     private static async Task<CartResponse> MapCartResponseAsync(
         AppDbContext context,
         Cart cart,
@@ -90,6 +117,8 @@ public class GetCartHandler(AppDbContext context)
             .OrderBy(ci => ci.Id)
             .ToListAsync(cancellationToken);
 
+        var imageByProduct = await GetPrimaryImagesAsync(context, items, cancellationToken);
+
         var mappedItems = items.Select(ci =>
         {
             var unitPrice = ci.UnitPrice ?? ci.Variant?.Price ?? ci.Product.Price;
@@ -101,6 +130,7 @@ public class GetCartHandler(AppDbContext context)
                 ci.Product.NameAr,
                 ci.Product.Slug,
                 ci.Variant?.Sku ?? ci.Product.Sku,
+                imageByProduct.GetValueOrDefault(ci.ProductId),
                 ci.Quantity,
                 unitPrice,
                 unitPrice * ci.Quantity);

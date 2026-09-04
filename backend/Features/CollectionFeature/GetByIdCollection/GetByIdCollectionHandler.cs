@@ -69,7 +69,13 @@ public class GetByIdCollectionHandler(AppDbContext context)
                 p.NameAr,
                 p.Slug,
                 p.Price,
+                p.CompareAtPrice,
                 p.Currency,
+                p.StockQuantity,
+                p.IsFeatured,
+                p.BrandId,
+                BrandName = p.Brand != null ? p.Brand.Name : null,
+                BrandSlug = p.Brand != null ? p.Brand.Slug : null,
                 PrimaryImageUrl = context.ProductImages
                     .Where(pi => pi.ProductId == p.Id)
                     .OrderByDescending(pi => pi.IsPrimary)
@@ -91,7 +97,13 @@ public class GetByIdCollectionHandler(AppDbContext context)
                 prod.NameAr,
                 prod.Slug,
                 prod.Price,
+                prod.CompareAtPrice,
                 prod.Currency,
+                prod.StockQuantity,
+                prod.IsFeatured,
+                prod.BrandId,
+                prod.BrandName,
+                prod.BrandSlug,
                 sortOrder,
                 prod.PrimaryImageUrl));
         }

@@ -1,3 +1,4 @@
+using backend.Common.Catalog;
 using backend.Common.Results;
 using backend.Infrastructure.Persistence;
 using MediatR;
@@ -17,7 +18,32 @@ public class GetProductFilterOptionsHandler(AppDbContext context)
             .Where(p => p.Status.ToLower() == "active");
 
         if (query.CategoryId is not null)
-            productQuery = productQuery.Where(p => p.CategoryId == query.CategoryId);
+        {
+            if (query.IncludeDescendants)
+            {
+                var categoryIds = await CategoryTree.ResolveAsync(
+                    context, query.CategoryId.Value, cancellationToken);
+                productQuery = productQuery.Where(p =>
+                    p.CategoryId != null && categoryIds.Contains(p.CategoryId.Value));
+            }
+            else
+            {
+                productQuery = productQuery.Where(p => p.CategoryId == query.CategoryId);
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var search = query.Search.Trim().ToLower();
+            productQuery = productQuery.Where(p =>
+                p.NameEn.ToLower().Contains(search) ||
+                (p.NameAr != null && p.NameAr.ToLower().Contains(search)) ||
+                (p.Sku != null && p.Sku.ToLower().Contains(search)) ||
+                (p.Barcode != null && p.Barcode.ToLower().Contains(search)) ||
+                (p.ShortDescriptionEn != null && p.ShortDescriptionEn.ToLower().Contains(search)) ||
+                (p.ShortDescriptionAr != null && p.ShortDescriptionAr.ToLower().Contains(search)) ||
+                p.Slug.ToLower().Contains(search));
+        }
 
         var brandCounts = await productQuery
             .Where(p => p.BrandId != null)

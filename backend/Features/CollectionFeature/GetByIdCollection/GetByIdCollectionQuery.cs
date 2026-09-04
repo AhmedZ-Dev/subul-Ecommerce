@@ -31,6 +31,12 @@ public record CollectionProductResponse(
     string? NameAr,
     string Slug,
     decimal Price,
+    decimal? CompareAtPrice,
     string Currency,
+    int StockQuantity,
+    bool IsFeatured,
+    long? BrandId,
+    string? BrandName,
+    string? BrandSlug,
     int SortOrder,
     string? PrimaryImageUrl);

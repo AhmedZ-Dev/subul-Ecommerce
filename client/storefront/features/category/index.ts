@@ -5,7 +5,6 @@ export {
   useStorefrontCategories,
   useStorefrontCategory,
   useCategoryTree,
-  useCategoryNav,
   categoryKeys,
 } from "./hooks/useCategory"
 
@@ -22,5 +21,7 @@ export {
   getStorefrontCategoryBySlug,
   getTopLevelCategories,
 } from "./api/category.api"
+
+export { getCachedTopLevelCategories } from "./api/category.cached"
 
 export { buildCategoryTree } from "./utils"

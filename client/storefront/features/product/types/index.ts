@@ -63,6 +63,7 @@ export interface StorefrontProductListItem {
 }
 
 export interface StorefrontProductDetail extends StorefrontProductListItem {
+  sku: string | null
   descriptionEn: string | null
   descriptionAr: string | null
   shortDescriptionEn: string | null
@@ -85,6 +86,8 @@ export interface ProductQueryParams {
   limit?: number
   search?: string
   categoryId?: number
+  /** Include products filed under the category's descendants, not just its own. */
+  includeDescendants?: boolean
   brandId?: number
   brandIds?: number[]
   minPrice?: number

@@ -5,7 +5,6 @@ import {
   getStorefrontCategories,
   getStorefrontCategoryById,
   getStorefrontCategoryBySlug,
-  getTopLevelCategories,
 } from "../api/category.api"
 import { CATEGORY_QUERY_KEYS } from "../constants"
 import { buildCategoryTree } from "../utils"
@@ -18,7 +17,6 @@ export const categoryKeys = {
   details: () => [...categoryKeys.all, "detail"] as const,
   detail: (id: number) => [...categoryKeys.details(), id] as const,
   detailBySlug: (slug: string) => [...categoryKeys.details(), "slug", slug] as const,
-  nav: () => [...categoryKeys.all, "nav"] as const,
 }
 
 export function useStorefrontCategories(params: CategoryQueryParams = {}, enabled = true) {
@@ -68,11 +66,3 @@ export function useCategoryTree(enabled = true) {
   }
 }
 
-export function useCategoryNav(enabled = true) {
-  return useQuery({
-    queryKey: categoryKeys.nav(),
-    queryFn: getTopLevelCategories,
-    staleTime: 60_000,
-    enabled,
-  })
-}

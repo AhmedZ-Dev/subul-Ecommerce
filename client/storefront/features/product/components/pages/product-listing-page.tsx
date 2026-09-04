@@ -19,11 +19,12 @@ export function ProductListingPage() {
 
   const hasAttrs = Object.keys(params.attrs).length > 0
 
-  const { data, isLoading, isFetching } = useStorefrontProducts({
+  const { data, isLoading, isFetching, isError, refetch } = useStorefrontProducts({
     page: params.page,
     limit: params.limit,
     search: params.search || undefined,
     categoryId: params.categoryId ?? undefined,
+    includeDescendants: true,
     brandIds: params.brandIds.length > 0 ? params.brandIds : undefined,
     minPrice: params.minPrice ?? undefined,
     maxPrice: params.maxPrice ?? undefined,
@@ -35,6 +36,30 @@ export function ProductListingPage() {
 
   const products = data?.items ?? []
   const totalPages = data?.totalPages ?? 1
+
+  const hasActiveFilters =
+    Boolean(params.search) ||
+    params.brandIds.length > 0 ||
+    params.brandId != null ||
+    params.minPrice != null ||
+    params.maxPrice != null ||
+    params.inStock != null ||
+    hasAttrs ||
+    params.categoryId != null
+
+  const resetFilters = () =>
+    setParams({
+      search: null,
+      brandIds: [],
+      brandId: null,
+      minPrice: null,
+      maxPrice: null,
+      inStock: null,
+      attrs: {},
+      categoryId: null,
+      page: 1,
+    })
+
 
   return (
     <PageContainer>
@@ -48,20 +73,35 @@ export function ProductListingPage() {
       <div className="flex gap-8">
         <aside className="hidden w-64 shrink-0 lg:block">
           <div className="sticky top-24">
-            <ProductSidebar />
+            <ProductSidebar includeDescendants />
           </div>
         </aside>
 
         <main className="min-w-0 flex-1">
-          <ProductToolbar total={data?.total} />
-          <ProductActiveFilterChips />
+          <ProductToolbar total={data?.total} includeDescendants />
+          <ProductActiveFilterChips includeDescendants />
 
-          {products.length === 0 && !isLoading ? (
+          {isError ? (
+            <div className="flex flex-col items-center gap-2 py-16 text-center">
+              <p className="font-medium">{messages.product.loadError}</p>
+              <p className="text-muted-foreground text-sm">
+                {messages.product.loadErrorDescription}
+              </p>
+              <Button variant="outline" className="mt-3 h-11" onClick={() => refetch()}>
+                {messages.common.retry}
+              </Button>
+            </div>
+          ) : products.length === 0 && !isLoading ? (
             <div className="flex flex-col items-center gap-2 py-16 text-center">
               <p className="font-medium">{messages.product.noProducts}</p>
               <p className="text-muted-foreground text-sm">
                 {messages.product.noProductsDescription}
               </p>
+              {hasActiveFilters && (
+                <Button variant="outline" className="mt-3 h-11" onClick={resetFilters}>
+                  {messages.product.filters.clearFilters}
+                </Button>
+              )}
             </div>
           ) : (
             <ProductGrid products={products} loading={isLoading || isFetching} />

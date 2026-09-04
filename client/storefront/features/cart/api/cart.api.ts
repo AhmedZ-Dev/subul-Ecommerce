@@ -20,6 +20,7 @@ interface BackendCartItem {
   productNameAr: string | null
   productSlug: string
   sku: string | null
+  imageUrl: string | null
   quantity: number
   unitPrice: number
   lineTotal: number
@@ -45,6 +46,7 @@ function toCartItem(raw: BackendCartItem): CartItem {
     productNameAr: raw.productNameAr,
     productSlug: raw.productSlug,
     sku: raw.sku,
+    imageUrl: raw.imageUrl ?? null,
     quantity: raw.quantity,
     unitPrice: raw.unitPrice,
     lineTotal: raw.lineTotal,

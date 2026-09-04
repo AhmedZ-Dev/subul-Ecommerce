@@ -10,11 +10,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { useCategoryNav } from "@/features/category"
+import type { CategoryListItem } from "@/features/category"
 import { messages, getCategoryName } from "@/lib/messages.ar"
 
-export function MobileNav() {
-  const { data: categories } = useCategoryNav()
+interface MobileNavProps {
+  categories: CategoryListItem[]
+}
+
+export function MobileNav({ categories }: MobileNavProps) {
 
   return (
     <Sheet>
@@ -22,7 +25,7 @@ export function MobileNav() {
         <Button
           variant="ghost"
           size="icon"
-          className="size-11 md:hidden"
+          className="size-11 lg:hidden"
           aria-label={messages.header.menu}
         >
           <Menu className="size-5" />
@@ -39,7 +42,7 @@ export function MobileNav() {
           <Button variant="ghost" className="h-11 justify-start" asChild>
             <Link href="/products">{messages.header.products}</Link>
           </Button>
-          {categories?.map((cat) => (
+          {categories.map((cat) => (
             <Button key={cat.id} variant="ghost" className="h-11 justify-start" asChild>
               <Link href={`/categories/${cat.slug}`}>
                 {getCategoryName(cat.nameAr, cat.nameEn)}

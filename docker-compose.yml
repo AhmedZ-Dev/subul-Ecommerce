@@ -60,6 +60,7 @@ services:
       - api
     environment:
       NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://49.12.219.180:5101/api}
+      NEXT_PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://49.12.219.180:3001}
     ports:
       - "3001:3001"
 

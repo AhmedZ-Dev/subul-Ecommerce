@@ -1,9 +1,9 @@
-import { Mail, MessageCircle, Phone } from "lucide-react"
+import { Mail, MessageCircle, type LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { messages } from "@/lib/messages.ar"
 
 export function ContactStrip() {
-  const { title, description, primaryCta, whatsapp, phone, email, label } = messages.contact
+  const { title, description, primaryCta, whatsapp, email, label } = messages.contact
 
   return (
     <section
@@ -45,12 +45,6 @@ export function ContactStrip() {
             external
           />
           <ContactLink
-            href={phone.href}
-            icon={Phone}
-            label={phone.label}
-            value={phone.value}
-          />
-          <ContactLink
             href={email.href}
             icon={Mail}
             label={email.label}
@@ -70,7 +64,7 @@ function ContactLink({
   external = false,
 }: {
   href: string
-  icon: typeof Phone
+  icon: LucideIcon
   label: string
   value: string
   external?: boolean

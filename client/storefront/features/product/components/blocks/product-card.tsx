@@ -4,8 +4,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { Package } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { resolveAssetUrl } from "@/lib/asset-url"
-import { AddToCartButton } from "./add-to-cart-button"
 import { formatCurrency, getProductName, messages } from "@/lib/messages.ar"
 import { cn } from "@/lib/utils"
 import type { StorefrontProductListItem } from "../../types"
@@ -104,22 +104,25 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
 
         <div className="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
-          <span className="text-primary text-base font-bold tabular-nums sm:text-lg">
+          <span className="text-primary shrink-0 text-base font-bold whitespace-nowrap tabular-nums sm:text-lg">
             {formatCurrency(product.price, product.currency)}
           </span>
           {hasComparePrice && (
-            <span className="text-muted-foreground text-xs line-through tabular-nums sm:text-sm">
+            <span className="text-muted-foreground shrink-0 text-sm line-through whitespace-nowrap tabular-nums">
               {formatCurrency(product.compareAtPrice!, product.currency)}
             </span>
           )}
         </div>
 
-        <AddToCartButton
-          productId={product.id}
-          disabled={outOfStock}
-          showIcon
+        <Button
+          asChild
+          variant={outOfStock ? "outline" : "default"}
           className="mt-2 h-10 w-full rounded-lg text-sm font-medium shadow-none sm:h-9"
-        />
+        >
+          <Link href={`/products/${product.slug}`}>
+            {messages.product.viewDetails}
+          </Link>
+        </Button>
       </div>
     </article>
   )

@@ -8,7 +8,13 @@ interface BackendCollectionProduct {
   nameAr: string | null
   slug: string
   price: number
+  compareAtPrice: number | null
   currency: string
+  stockQuantity: number
+  isFeatured: boolean
+  brandId: number | null
+  brandName: string | null
+  brandSlug: string | null
   sortOrder: number
   primaryImageUrl: string | null
 }
@@ -54,7 +60,14 @@ function toDto(raw: BackendCollectionDetail): CollectionDto {
       nameAr: p.nameAr,
       slug: p.slug,
       price: p.price,
+      compareAtPrice: p.compareAtPrice ?? null,
       currency: p.currency ?? "IQD",
+      stockQuantity: p.stockQuantity ?? 0,
+      isFeatured: p.isFeatured ?? false,
+      brand:
+        p.brandId != null && p.brandName != null
+          ? { id: p.brandId, name: p.brandName, slug: p.brandSlug ?? "" }
+          : null,
       sortOrder: p.sortOrder,
       primaryImageUrl: p.primaryImageUrl ?? null,
     })),

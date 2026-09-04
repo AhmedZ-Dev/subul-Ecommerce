@@ -15,9 +15,12 @@ public class GetProductFilterOptionsController(ISender sender) : ControllerBase
     [AllowAnonymous]
     [HttpGet("filter-options")]
     public async Task<ActionResult<ApiResponse<ProductFilterOptionsResponse>>> GetFilterOptions(
-        [FromQuery] long? categoryId)
+        [FromQuery] long? categoryId,
+        [FromQuery] string? search,
+        [FromQuery] bool includeDescendants = false)
     {
-        var result = await sender.Send(new GetProductFilterOptionsQuery(categoryId));
+        var result = await sender.Send(
+            new GetProductFilterOptionsQuery(categoryId, search, includeDescendants));
         return result.ToActionResult();
     }
 }

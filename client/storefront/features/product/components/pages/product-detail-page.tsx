@@ -44,13 +44,19 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
 
   const name = getProductName(product.nameAr, product.nameEn)
   const description = product.descriptionAr ?? product.descriptionEn
-  const selectedVariant = product.variants.find((v) => v.id === selectedVariantId)
+  // Only active variants are selectable, so gate on those — a product whose
+  // variants are all inactive behaves like a plain product, not a dead end.
+  const activeVariants = product.variants.filter((v) => v.isActive)
+  const soleVariantId = activeVariants.length === 1 ? activeVariants[0].id : undefined
+  const activeVariantId = selectedVariantId ?? soleVariantId
+  const selectedVariant = product.variants.find((v) => v.id === activeVariantId)
   const displayPrice = selectedVariant?.price ?? product.price
   const displayCompareAt = selectedVariant?.compareAtPrice ?? product.compareAtPrice
   const stock = selectedVariant?.stockQuantity ?? product.stockQuantity
   const outOfStock = stock <= 0
   const minQty = product.minOrderQuantity
-  const addDisabled = outOfStock || (product.variants.length > 0 && !selectedVariantId)
+  const needsVariantChoice = activeVariants.length > 0 && activeVariantId == null
+  const addDisabled = outOfStock || needsVariantChoice
 
   return (
     <PageContainer className="pb-28 lg:pb-6">
@@ -96,11 +102,18 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
           )}
 
           {product.variants.length > 0 && (
-            <ProductVariantSelector
-              variants={product.variants}
-              selectedId={selectedVariantId}
-              onSelect={setSelectedVariantId}
-            />
+            <div className="flex flex-col gap-2">
+              <ProductVariantSelector
+                variants={product.variants}
+                selectedId={activeVariantId}
+                onSelect={setSelectedVariantId}
+              />
+              {needsVariantChoice && (
+                <p className="text-muted-foreground text-xs">
+                  {messages.product.detail.selectVariantHint}
+                </p>
+              )}
+            </div>
           )}
 
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
@@ -139,7 +152,7 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
 
           <AddToCartButton
             productId={product.id}
-            variantId={selectedVariantId}
+            variantId={activeVariantId}
             quantity={quantity}
             disabled={addDisabled}
             className="hidden h-11 w-full lg:inline-flex lg:w-auto"
@@ -195,7 +208,7 @@ export function ProductDetailPage({ productId, initialProduct }: ProductDetailPa
           </div>
           <AddToCartButton
             productId={product.id}
-            variantId={selectedVariantId}
+            variantId={activeVariantId}
             quantity={quantity}
             disabled={addDisabled}
             className="h-11 shrink-0 px-6"

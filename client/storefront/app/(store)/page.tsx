@@ -1,17 +1,25 @@
 import type { Metadata } from "next"
 import { Suspense } from "react"
-import { getTopLevelCategories } from "@/features/category"
+import { getCachedTopLevelCategories } from "@/features/category"
 import { getActiveCollections } from "@/features/collection"
 import { getStorefrontProducts } from "@/features/product"
 import { HomePageContent } from "@/features/home/components/home-page-content"
 import type { CategoryProductSection } from "@/features/home/components/home-page-content"
+import { JsonLd } from "@/components/seo/json-ld"
 import { messages } from "@/lib/messages.ar"
+import { buildSocialMetadata } from "@/lib/open-graph"
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from "@/lib/structured-data"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: messages.storefront.pageTitle,
   description: messages.storefront.description,
+  ...buildSocialMetadata({
+    title: `${messages.common.companyName} — ${messages.storefront.pageTitle}`,
+    description: messages.storefront.description,
+    path: "/",
+  }),
 }
 
 const MAX_CATEGORY_SECTIONS = 4
@@ -19,14 +27,14 @@ const PRODUCTS_PER_CATEGORY = 8
 const FEATURED_PRODUCTS_LIMIT = 8
 
 export default async function HomePage() {
-  let topCategories: Awaited<ReturnType<typeof getTopLevelCategories>> = []
+  let topCategories: Awaited<ReturnType<typeof getCachedTopLevelCategories>> = []
   let featuredProducts: Awaited<ReturnType<typeof getStorefrontProducts>>["items"] = []
   let collections: Awaited<ReturnType<typeof getActiveCollections>> = []
   let categoryProductSections: CategoryProductSection[] = []
 
   try {
     const [categories, featured, activeCollections] = await Promise.all([
-      getTopLevelCategories(),
+      getCachedTopLevelCategories(),
       getStorefrontProducts({
         isFeatured: true,
         limit: FEATURED_PRODUCTS_LIMIT,
@@ -69,6 +77,8 @@ export default async function HomePage() {
 
   return (
     <Suspense fallback={<div className="p-8 text-center">{messages.common.loading}</div>}>
+      <JsonLd data={buildOrganizationJsonLd()} />
+      <JsonLd data={buildWebSiteJsonLd()} />
       <HomePageContent
         topCategories={topCategories}
         featuredProducts={featuredProducts}

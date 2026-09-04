@@ -4,7 +4,11 @@ export interface CollectionProduct {
   nameAr: string | null
   slug: string
   price: number
+  compareAtPrice: number | null
   currency: string
+  stockQuantity: number
+  isFeatured: boolean
+  brand: { id: number; name: string; slug: string } | null
   sortOrder: number
   primaryImageUrl: string | null
 }

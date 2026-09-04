@@ -40,7 +40,8 @@ public record GetByIdProductResponse(
     ProductCategoryInfo? Category,
     ProductBrandInfo? Brand,
     List<ProductVariantInfo> Variants,
-    List<ProductAttributeValueInfo> AttributeValues);
+    List<ProductAttributeValueInfo> AttributeValues,
+    string? PrimaryImageUrl);
 
 public record ProductCategoryInfo(long Id, string NameEn, string? NameAr, string Slug);
 

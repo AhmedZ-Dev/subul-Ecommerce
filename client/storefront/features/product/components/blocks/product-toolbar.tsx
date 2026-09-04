@@ -25,9 +25,14 @@ import { productListingParsers } from "../../search-params"
 interface ProductToolbarProps {
   total?: number
   categoryId?: number
+  includeDescendants?: boolean
 }
 
-export function ProductToolbar({ total, categoryId }: ProductToolbarProps) {
+export function ProductToolbar({
+  total,
+  categoryId,
+  includeDescendants,
+}: ProductToolbarProps) {
   const [params, setParams] = useQueryStates(productListingParsers, {
     history: "replace",
     shallow: true,
@@ -51,7 +56,11 @@ export function ProductToolbar({ total, categoryId }: ProductToolbarProps) {
               <SheetTitle>{messages.product.filters.title}</SheetTitle>
             </SheetHeader>
             <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] [-webkit-overflow-scrolling:touch]">
-              <ProductSidebar categoryId={categoryId} variant="sheet" />
+              <ProductSidebar
+                categoryId={categoryId}
+                includeDescendants={includeDescendants}
+                variant="sheet"
+              />
             </div>
           </SheetContent>
         </Sheet>

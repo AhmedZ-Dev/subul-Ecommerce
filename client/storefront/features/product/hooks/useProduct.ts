@@ -14,8 +14,14 @@ export const productKeys = {
   all: PRODUCT_QUERY_KEYS.ALL,
   lists: () => [...productKeys.all, "list"] as const,
   list: (params: ProductQueryParams) => [...productKeys.lists(), params] as const,
-  filterOptions: (categoryId?: number) =>
-    [...productKeys.all, "filter-options", categoryId ?? "all"] as const,
+  filterOptions: (categoryId?: number, search?: string, includeDescendants?: boolean) =>
+    [
+      ...productKeys.all,
+      "filter-options",
+      categoryId ?? "all",
+      search ?? "",
+      includeDescendants === true,
+    ] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: number) => [...productKeys.details(), id] as const,
   detailBySlug: (slug: string) => [...productKeys.details(), "slug", slug] as const,

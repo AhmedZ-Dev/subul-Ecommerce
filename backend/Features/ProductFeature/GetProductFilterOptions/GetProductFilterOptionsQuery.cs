@@ -3,7 +3,10 @@ using MediatR;
 
 namespace backend.Features.ProductFeature.GetProductFilterOptions;
 
-public record GetProductFilterOptionsQuery(long? CategoryId = null)
+public record GetProductFilterOptionsQuery(
+    long? CategoryId = null,
+    string? Search = null,
+    bool IncludeDescendants = false)
     : IRequest<Result<ProductFilterOptionsResponse>>;
 
 public record ProductFilterOptionsResponse(
