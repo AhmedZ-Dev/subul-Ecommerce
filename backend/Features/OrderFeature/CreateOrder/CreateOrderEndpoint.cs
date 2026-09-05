@@ -12,7 +12,9 @@ namespace backend.Features.OrderFeature.CreateOrder;
 public class CreateOrderController(ISender sender) : ControllerBase
 {
     /// <summary>
-    /// Guest checkout endpoint — must remain [AllowAnonymous] when JWT auth is added.
+    /// Guest checkout endpoint — must remain [AllowAnonymous].
+    /// Because it is anonymous it accepts no userId or addressId from the body:
+    /// both would let a caller check out another user's cart or read their address.
     /// </summary>
     [AllowAnonymous]
     [HttpPost]
@@ -26,8 +28,8 @@ public class CreateOrderController(ISender sender) : ControllerBase
         var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
         var command = new CreateOrderCommand(
             SessionId: sessionId,
-            UserId: request.UserId,
-            AddressId: request.AddressId,
+            UserId: null,
+            AddressId: null,
             ShippingFirstName: request.ShippingFirstName,
             ShippingLastName: request.ShippingLastName,
             ShippingPhone: request.ShippingPhone,
@@ -48,8 +50,6 @@ public class CreateOrderController(ISender sender) : ControllerBase
 }
 
 public record CreateOrderRequest(
-    long? UserId = null,
-    long? AddressId = null,
     string? ShippingFirstName = null,
     string? ShippingLastName = null,
     string? ShippingPhone = null,

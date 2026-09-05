@@ -12,7 +12,6 @@ namespace backend.Features.OrderFeature.GetByIdOrderItem;
 [Tags("Orders")]
 public class GetByIdOrderItemController(ISender sender) : ControllerBase
 {
-    [AllowAnonymous]
     [HttpGet("{itemId:long}")]
     public async Task<ActionResult<ApiResponse<OrderItemResponse>>> GetByIdOrderItem(
         long orderId,

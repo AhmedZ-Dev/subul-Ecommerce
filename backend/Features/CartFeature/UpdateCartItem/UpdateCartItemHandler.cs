@@ -30,7 +30,7 @@ public class UpdateCartItemHandler(AppDbContext context)
         if (cartItem is null)
             return Result<CartResponse>.Failure("Cart item not found");
 
-        if (!BelongsToCaller(cartItem.Cart, sessionId, command.UserId))
+        if (!BelongsToCaller(cartItem.Cart, sessionId))
             return Result<CartResponse>.Failure("Cart item not found");
 
         var availableStock = cartItem.Variant?.StockQuantity ?? cartItem.Product.StockQuantity;
@@ -57,13 +57,9 @@ public class UpdateCartItemHandler(AppDbContext context)
     private static string? NormalizeSession(string? sessionId) =>
         string.IsNullOrWhiteSpace(sessionId) ? null : sessionId.Trim();
 
-    private static bool BelongsToCaller(Cart cart, string sessionId, long? userId)
-    {
-        if (userId is not null && cart.UserId == userId)
-            return true;
-
-        return string.Equals(cart.SessionId, sessionId, StringComparison.Ordinal);
-    }
+    /// <summary>Ownership comes from the session header alone — a caller-supplied userId is not proof of identity.</summary>
+    private static bool BelongsToCaller(Cart cart, string sessionId) =>
+        string.Equals(cart.SessionId, sessionId, StringComparison.Ordinal);
 
     private static async Task<CartResponse> MapCartResponseAsync(
         AppDbContext context,

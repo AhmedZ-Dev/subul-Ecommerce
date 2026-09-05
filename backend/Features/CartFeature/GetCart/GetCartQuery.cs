@@ -3,7 +3,7 @@ using MediatR;
 
 namespace backend.Features.CartFeature.GetCart;
 
-public record GetCartQuery(string SessionId, long? UserId = null) : IRequest<Result<CartResponse>>;
+public record GetCartQuery(string SessionId) : IRequest<Result<CartResponse>>;
 
 public record CartItemResponse(
     long Id,

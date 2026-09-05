@@ -17,7 +17,7 @@ public class GetCartHandler(AppDbContext context)
         if (sessionId is null)
             return Result<CartResponse>.Failure("Cart session is required");
 
-        var cart = await GetOrCreateCartAsync(context, sessionId, query.UserId, cancellationToken);
+        var cart = await GetOrCreateCartAsync(context, sessionId, cancellationToken);
         var response = await MapCartResponseAsync(context, cart, cancellationToken);
         return Result<CartResponse>.Success(response);
     }
@@ -25,46 +25,26 @@ public class GetCartHandler(AppDbContext context)
     private static string? NormalizeSession(string? sessionId) =>
         string.IsNullOrWhiteSpace(sessionId) ? null : sessionId.Trim();
 
-    private static async Task<Cart> GetOrCreateCartAsync(
+    /// <summary>
+    /// Carts are keyed by session only. Never resolve a cart from a caller-supplied
+    /// userId, and never rebind an existing cart's SessionId — either lets an
+    /// anonymous caller take over another user's cart.
+    /// </summary>
+    internal static async Task<Cart> GetOrCreateCartAsync(
         AppDbContext context,
         string sessionId,
-        long? userId,
         CancellationToken cancellationToken)
     {
-        Cart? cart = null;
-
-        if (userId is not null)
-        {
-            cart = await context.Carts
-                .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
-        }
-
-        cart ??= await context.Carts
+        var cart = await context.Carts
             .Include(c => c.CartItems)
             .FirstOrDefaultAsync(c => c.SessionId == sessionId, cancellationToken);
 
         if (cart is not null)
-        {
-            if (userId is not null && cart.UserId is null)
-            {
-                cart.UserId = userId;
-                cart.UpdatedAt = DateTime.Now;
-            }
-
-            if (cart.SessionId != sessionId)
-            {
-                cart.SessionId = sessionId;
-                cart.UpdatedAt = DateTime.Now;
-            }
-
             return cart;
-        }
 
         var now = DateTime.Now;
         cart = new Cart
         {
-            UserId = userId,
             SessionId = sessionId,
             ExpiresAt = now.AddDays(30),
             CreatedAt = now,

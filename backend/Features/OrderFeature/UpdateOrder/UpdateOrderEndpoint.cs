@@ -12,7 +12,6 @@ namespace backend.Features.OrderFeature.UpdateOrder;
 [Tags("Orders")]
 public class UpdateOrderController(ISender sender) : ControllerBase
 {
-    [AllowAnonymous]
     [HttpPut("{id:long}")]
     public async Task<ActionResult<ApiResponse<GetByIdOrderResponse>>> UpdateOrder(
         long id,

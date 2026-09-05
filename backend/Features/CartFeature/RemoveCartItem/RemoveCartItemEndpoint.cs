@@ -15,13 +15,12 @@ public class RemoveCartItemController(ISender sender) : ControllerBase
     [HttpDelete("{id:long}")]
     public async Task<ActionResult<ApiResponse<bool>>> RemoveCartItem(
         long id,
-        [FromHeader(Name = "X-Cart-Session")] string? sessionId,
-        [FromQuery] long? userId = null)
+        [FromHeader(Name = "X-Cart-Session")] string? sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
             return BadRequest(new ApiResponse<bool>(false, default, "Cart session is required"));
 
-        var result = await sender.Send(new RemoveCartItemCommand(id, sessionId, userId));
+        var result = await sender.Send(new RemoveCartItemCommand(id, sessionId));
         return result.ToActionResult();
     }
 }

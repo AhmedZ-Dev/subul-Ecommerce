@@ -17,7 +17,7 @@ public class ListAttributeGroupPaginatedHandler(AppDbContext context)
         CancellationToken cancellationToken)
     {
         var page = query.Page <= 0 ? 1 : query.Page;
-        var limit = query.Limit <= 0 ? 10 : query.Limit;
+        var limit = Math.Clamp(query.Limit <= 0 ? 10 : query.Limit, 1, 100);
 
         var groupsQuery = context.AttributeGroups.AsNoTracking().AsQueryable();
 

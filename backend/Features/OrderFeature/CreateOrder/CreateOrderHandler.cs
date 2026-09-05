@@ -43,9 +43,7 @@ public class CreateOrderHandler(AppDbContext context)
             .ThenInclude(ci => ci.Product)
             .Include(c => c.CartItems)
             .ThenInclude(ci => ci.Variant)
-            .FirstOrDefaultAsync(
-                c => c.SessionId == sessionId || (command.UserId != null && c.UserId == command.UserId),
-                cancellationToken);
+            .FirstOrDefaultAsync(c => c.SessionId == sessionId, cancellationToken);
 
         if (cart is null || cart.CartItems.Count == 0)
             return Result<CreateOrderResponse>.Failure("Cart is empty");

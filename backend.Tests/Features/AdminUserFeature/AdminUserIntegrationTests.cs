@@ -104,10 +104,14 @@ public class AdminUserIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task GET_Categories_WithoutToken_Returns401()
+    public async Task GET_Categories_WithoutToken_StaysPublic()
     {
+        // The category list is a storefront catalog read and is deliberately
+        // [AllowAnonymous]. This test used to assert 401, from before the storefront
+        // existed; it asserts the documented intent now. For a route that must stay
+        // protected, see OrderAccessControlTests.
         var response = await _client.GetAsync("/api/categories");
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

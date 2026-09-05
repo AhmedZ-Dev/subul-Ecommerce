@@ -51,7 +51,7 @@ public class AddCartItemHandler(AppDbContext context)
         if (command.Quantity < minOrderQuantity)
             return Result<AddCartItemResponse>.Failure($"Minimum order quantity is {minOrderQuantity}");
 
-        var cart = await GetOrCreateCartAsync(context, sessionId, command.UserId, cancellationToken);
+        var cart = await GetCartHandler.GetOrCreateCartAsync(context, sessionId, cancellationToken);
 
         var existingItem = await context.CartItems
             .FirstOrDefaultAsync(
@@ -97,58 +97,6 @@ public class AddCartItemHandler(AppDbContext context)
 
     private static string ResolveOrCreateSession(string? sessionId) =>
         string.IsNullOrWhiteSpace(sessionId) ? Guid.NewGuid().ToString("N") : sessionId.Trim();
-
-    private static async Task<Cart> GetOrCreateCartAsync(
-        AppDbContext context,
-        string sessionId,
-        long? userId,
-        CancellationToken cancellationToken)
-    {
-        Cart? cart = null;
-
-        if (userId is not null)
-        {
-            cart = await context.Carts
-                .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.UserId == userId, cancellationToken);
-        }
-
-        cart ??= await context.Carts
-            .Include(c => c.CartItems)
-            .FirstOrDefaultAsync(c => c.SessionId == sessionId, cancellationToken);
-
-        if (cart is not null)
-        {
-            if (userId is not null && cart.UserId is null)
-            {
-                cart.UserId = userId;
-                cart.UpdatedAt = DateTime.Now;
-            }
-
-            if (cart.SessionId != sessionId)
-            {
-                cart.SessionId = sessionId;
-                cart.UpdatedAt = DateTime.Now;
-            }
-
-            return cart;
-        }
-
-        var now = DateTime.Now;
-        cart = new Cart
-        {
-            UserId = userId,
-            SessionId = sessionId,
-            ExpiresAt = now.AddDays(30),
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-
-        context.Carts.Add(cart);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return cart;
-    }
 
     private static async Task<CartResponse> MapCartResponseAsync(
         AppDbContext context,

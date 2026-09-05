@@ -11,7 +11,6 @@ namespace backend.Features.OrderFeature.ListOrderItems;
 [Tags("Orders")]
 public class ListOrderItemsController(ISender sender) : ControllerBase
 {
-    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ListOrderItemsResponse>>> ListOrderItems(long orderId)
     {

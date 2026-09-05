@@ -14,9 +14,9 @@ public class MergeCartController(ISender sender) : ControllerBase
 {
     /// <summary>
     /// Merges a guest cart (session) into a registered user's cart after login.
-    /// Keep [AllowAnonymous] until JWT is wired; callers supply userId explicitly for now.
+    /// Requires authentication: the request names the target userId, so an anonymous
+    /// caller could otherwise merge into — and take over — any user's cart.
     /// </summary>
-    [AllowAnonymous]
     [HttpPost("merge")]
     public async Task<ActionResult<ApiResponse<CartResponse>>> MergeCart(
         [FromHeader(Name = "X-Cart-Session")] string? sessionId,

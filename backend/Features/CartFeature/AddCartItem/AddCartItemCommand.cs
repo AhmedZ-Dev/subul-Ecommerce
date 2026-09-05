@@ -8,7 +8,6 @@ public record AddCartItemCommand(
     string? SessionId,
     long ProductId,
     long? VariantId = null,
-    int Quantity = 1,
-    long? UserId = null) : IRequest<Result<AddCartItemResponse>>;
+    int Quantity = 1) : IRequest<Result<AddCartItemResponse>>;
 
 public record AddCartItemResponse(CartResponse Cart, string SessionId);

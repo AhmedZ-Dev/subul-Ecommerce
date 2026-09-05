@@ -11,7 +11,6 @@ namespace backend.Features.OrderFeature.ListOrderPaginated;
 [Tags("Orders")]
 public class ListOrderPaginatedController(ISender sender) : ControllerBase
 {
-    [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ListOrderPaginatedResponse>>> ListOrders(
         [FromQuery] int page = 1,

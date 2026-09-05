@@ -22,10 +22,10 @@ public class UpdateCartItemController(ISender sender) : ControllerBase
         if (string.IsNullOrWhiteSpace(sessionId))
             return BadRequest(new ApiResponse<CartResponse>(false, default, "Cart session is required"));
 
-        var command = new UpdateCartItemCommand(id, sessionId, request.Quantity, request.UserId);
+        var command = new UpdateCartItemCommand(id, sessionId, request.Quantity);
         var result = await sender.Send(command);
         return result.ToActionResult();
     }
 }
 
-public record UpdateCartItemRequest(int Quantity, long? UserId = null);
+public record UpdateCartItemRequest(int Quantity);

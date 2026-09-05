@@ -5,5 +5,4 @@ namespace backend.Features.CartFeature.RemoveCartItem;
 
 public record RemoveCartItemCommand(
     long CartItemId,
-    string SessionId,
-    long? UserId = null) : IRequest<Result<bool>>;
+    string SessionId) : IRequest<Result<bool>>;

@@ -14,13 +14,12 @@ public class GetCartController(ISender sender) : ControllerBase
     [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<ApiResponse<CartResponse>>> GetCart(
-        [FromHeader(Name = "X-Cart-Session")] string? sessionId,
-        [FromQuery] long? userId = null)
+        [FromHeader(Name = "X-Cart-Session")] string? sessionId)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
             return BadRequest(new ApiResponse<CartResponse>(false, default, "Cart session is required"));
 
-        var result = await sender.Send(new GetCartQuery(sessionId, userId));
+        var result = await sender.Send(new GetCartQuery(sessionId));
         return result.ToActionResult();
     }
 }
