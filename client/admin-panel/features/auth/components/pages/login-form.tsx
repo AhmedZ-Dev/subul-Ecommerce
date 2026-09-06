@@ -26,6 +26,16 @@ import { Input } from '@/components/ui/input';
 import { messages } from '@/lib/messages.ar';
 import { loginSchema, type LoginInput } from '../../schemas/login.schema';
 
+function getLoginErrorMessage(code: string | undefined) {
+  const match = /^rate-limited-(\d+)$/.exec(code ?? '');
+
+  if (match) {
+    return messages.auth.loginRateLimited(Number(match[1]));
+  }
+
+  return messages.auth.loginError;
+}
+
 export function LoginForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +59,7 @@ export function LoginForm() {
         redirect: false,
       });
       if (result?.error) {
-        setError(messages.auth.loginError);
+        setError(getLoginErrorMessage(result.code));
       } else {
         router.replace('/dashboard');
       }

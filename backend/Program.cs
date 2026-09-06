@@ -1,4 +1,5 @@
 using backend.Common.Middleware;
+using backend.Common.RateLimiting;
 using backend.Common.Storage;
 using backend.Common.Auth;
 using backend.DependencyInjection;
@@ -103,7 +104,9 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseAuthentication();
+app.UseMiddleware<RedisRateLimitMiddleware>();
 app.UseAuthorization();
+app.UseOutputCache();
 
 app.MapControllers();
 

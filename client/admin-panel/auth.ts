@@ -1,8 +1,16 @@
 import NextAuth from 'next-auth';
+import { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
 const BACKEND_API =
   process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5101/api';
+
+class RateLimitedCredentialsSignin extends CredentialsSignin {
+  constructor(retryAfterSeconds: number) {
+    super();
+    this.code = `rate-limited-${retryAfterSeconds}`;
+  }
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -20,6 +28,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             password: credentials?.password,
           }),
         });
+
+        if (res.status === 429) {
+          const retryAfterSeconds = Number.parseInt(
+            res.headers.get('Retry-After') ?? '',
+            10,
+          );
+          throw new RateLimitedCredentialsSignin(
+            Number.isFinite(retryAfterSeconds) && retryAfterSeconds > 0
+              ? retryAfterSeconds
+              : 300,
+          );
+        }
 
         if (!res.ok) return null;
 

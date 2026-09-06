@@ -112,6 +112,8 @@ export const messages = {
     passwordLabel: "كلمة المرور",
     loginButton: "تسجيل الدخول",
     loginError: "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+    loginRateLimited: (seconds: number) =>
+      `تم تجاوز عدد محاولات تسجيل الدخول. حاول مرة أخرى بعد ${seconds} ثانية.`,
     sessionExpired: "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
     loggingIn: "جاري تسجيل الدخول…",
     loggingOut: "جاري تسجيل الخروج…",
