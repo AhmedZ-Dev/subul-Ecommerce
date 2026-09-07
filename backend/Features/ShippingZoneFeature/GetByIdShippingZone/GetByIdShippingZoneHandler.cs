@@ -23,6 +23,11 @@ public class GetByIdShippingZoneHandler(AppDbContext context)
         if (zone is null)
             return Result<GetByIdShippingZoneResponse>.Failure("Shipping zone not found");
 
+        // A row hidden from the storefront answers exactly like a missing
+        // one: a distinct error would confirm the id/slug exists.
+        if (query.PublicOnly && !zone.IsActive)
+            return Result<GetByIdShippingZoneResponse>.Failure("Shipping zone not found");
+
         var governorates = ShippingZoneGovernorates.Parse(zone.Governorates);
 
         var mappedRates = zone.ShippingRates.Select(r => new GetByIdShippingRateResponse(

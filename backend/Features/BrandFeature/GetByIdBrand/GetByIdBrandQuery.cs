@@ -3,7 +3,7 @@ using MediatR;
 
 namespace backend.Features.BrandFeature.GetByIdBrand;
 
-public record GetByIdBrandQuery(long Id) : IRequest<Result<GetByIdBrandResponse>>;
+public record GetByIdBrandQuery(long Id, bool PublicOnly = false) : IRequest<Result<GetByIdBrandResponse>>;
 
 public record GetByIdBrandResponse(
     long Id,

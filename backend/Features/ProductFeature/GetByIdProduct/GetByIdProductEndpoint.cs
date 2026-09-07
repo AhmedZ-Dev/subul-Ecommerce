@@ -16,7 +16,7 @@ public class GetByIdProductController(ISender sender) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiResponse<GetByIdProductResponse>>> GetByIdProduct(long id)
     {
-        var result = await sender.Send(new GetByIdProductQuery(id));
+        var result = await sender.Send(new GetByIdProductQuery(id, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }

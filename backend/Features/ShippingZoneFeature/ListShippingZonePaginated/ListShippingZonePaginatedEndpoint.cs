@@ -17,6 +17,11 @@ public class ListShippingZonePaginatedController(ISender sender) : ControllerBas
     public async Task<ActionResult<ApiResponse<ListShippingZonePaginatedResponse>>> ListShippingZonePaginated(
         [FromQuery] ListShippingZonePaginatedQuery query)
     {
+        // Pin the visibility filter for anonymous callers so this public
+        // route cannot be used to enumerate disabled shipping zones.
+        if (this.IsAnonymousCaller())
+            query = query with { IsActive = true };
+
         var result = await sender.Send(query);
         return result.ToActionResult();
     }

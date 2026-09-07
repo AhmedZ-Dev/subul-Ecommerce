@@ -82,15 +82,19 @@ public sealed class RedisRateLimitMiddleware(
             return;
         }
 
+        var isLoginRequest = HttpMethods.IsPost(context.Request.Method) &&
+            string.Equals(context.Request.Path.Value, "/api/auth/login", StringComparison.OrdinalIgnoreCase);
+
         var rateLimiter = context.RequestServices.GetService<RedisRateLimiter>();
         if (rateLimiter is null)
         {
-            await next(context);
+            // Startup validation makes this unreachable while Enabled is true.
+            // Kept as defence in depth, and routed through the same decision as
+            // a runtime outage so both paths cannot drift apart.
+            await HandleLimiterUnavailableAsync(context, isLoginRequest, "the limiter is not registered");
             return;
         }
 
-        var isLoginRequest = HttpMethods.IsPost(context.Request.Method) &&
-            string.Equals(context.Request.Path.Value, "/api/auth/login", StringComparison.OrdinalIgnoreCase);
         var permitLimit = isLoginRequest
             ? options.Value.LoginPermitLimit
             : options.Value.PermitLimit;
@@ -112,8 +116,8 @@ public sealed class RedisRateLimitMiddleware(
         }
         catch (Exception exception) when (exception is RedisException or TimeoutException)
         {
-            logger.LogWarning(exception, "Redis rate limiter is unavailable; allowing the request");
-            await next(context);
+            logger.LogWarning(exception, "Redis rate limiter is unavailable");
+            await HandleLimiterUnavailableAsync(context, isLoginRequest, "Redis is unavailable");
             return;
         }
 
@@ -134,6 +138,52 @@ public sealed class RedisRateLimitMiddleware(
         SetRateLimitHeaders(context.Response, permitLimit, decision.Remaining);
         context.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
 
+        var response = new ApiResponse<object>(
+            success: false,
+            data: null,
+            message: "Too many requests. Please try again later.");
+
+        await context.Response.WriteAsJsonAsync(response, context.RequestAborted);
+    }
+
+    /// <summary>
+    /// Decides what to do when the limiter cannot reach a verdict.
+    ///
+    /// Login fails closed, everything else fails open. The asymmetry is
+    /// deliberate: knocking Redis over is exactly how an attacker would strip
+    /// the brute-force protection off /api/auth/login before running a password
+    /// list, so that route must not degrade into "unlimited". The catalog and
+    /// cart routes carry no such leverage, and taking the storefront down with
+    /// Redis would turn a cache outage into a full outage.
+    /// </summary>
+    private async Task HandleLimiterUnavailableAsync(
+        HttpContext context,
+        bool isLoginRequest,
+        string reason)
+    {
+        if (!isLoginRequest)
+        {
+            logger.LogWarning(
+                "Rate limiting is not being enforced ({Reason}); allowing {Method} {Path}",
+                reason,
+                context.Request.Method,
+                context.Request.Path);
+
+            await next(context);
+            return;
+        }
+
+        logger.LogError(
+            "Rate limiting is not being enforced ({Reason}); rejecting the login attempt rather than " +
+            "serving it unprotected",
+            reason);
+
+        var retryAfterSeconds = Math.Max(1, options.Value.LoginWindowSeconds);
+        context.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        context.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+
+        // Deliberately the same body the real limit returns: whether the limiter
+        // is down is not something an anonymous caller should be able to probe.
         var response = new ApiResponse<object>(
             success: false,
             data: null,

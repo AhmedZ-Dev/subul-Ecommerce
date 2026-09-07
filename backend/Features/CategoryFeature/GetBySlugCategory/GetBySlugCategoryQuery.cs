@@ -4,4 +4,4 @@ using backend.Features.CategoryFeature.GetByIdCategory;
 
 namespace backend.Features.CategoryFeature.GetBySlugCategory;
 
-public record GetBySlugCategoryQuery(string Slug) : IRequest<Result<GetByIdCategoryResponse>>;
+public record GetBySlugCategoryQuery(string Slug, bool PublicOnly = false) : IRequest<Result<GetByIdCategoryResponse>>;

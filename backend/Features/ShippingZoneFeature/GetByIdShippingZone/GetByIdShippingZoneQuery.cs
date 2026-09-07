@@ -5,7 +5,7 @@ using MediatR;
 
 namespace backend.Features.ShippingZoneFeature.GetByIdShippingZone;
 
-public record GetByIdShippingZoneQuery(long Id) : IRequest<Result<GetByIdShippingZoneResponse>>;
+public record GetByIdShippingZoneQuery(long Id, bool PublicOnly = false) : IRequest<Result<GetByIdShippingZoneResponse>>;
 
 public record GetByIdShippingZoneResponse(
     long Id,

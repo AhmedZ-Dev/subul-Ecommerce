@@ -17,7 +17,7 @@ public class GetBySlugCategoryController(ISender sender) : ControllerBase
     [HttpGet("{slug}")]
     public async Task<ActionResult<ApiResponse<GetByIdCategoryResponse>>> GetBySlugCategory(string slug)
     {
-        var result = await sender.Send(new GetBySlugCategoryQuery(slug));
+        var result = await sender.Send(new GetBySlugCategoryQuery(slug, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }

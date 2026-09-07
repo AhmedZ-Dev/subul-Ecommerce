@@ -17,6 +17,11 @@ public class ListCategoryPaginatedController(ISender sender) : ControllerBase
     public async Task<ActionResult<ApiResponse<ListCategoryPaginatedResponse>>> ListCategories(
         [FromQuery] ListCategoryPaginatedQuery query)
     {
+        // Pin the visibility filter for anonymous callers so this public
+        // route cannot be used to enumerate disabled categories.
+        if (this.IsAnonymousCaller())
+            query = query with { IsActive = true };
+
         var result = await sender.Send(query);
         return result.ToActionResult();
     }

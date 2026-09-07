@@ -3,7 +3,7 @@ using MediatR;
 
 namespace backend.Features.CategoryFeature.GetByIdCategory;
 
-public record GetByIdCategoryQuery(long Id) : IRequest<Result<GetByIdCategoryResponse>>;
+public record GetByIdCategoryQuery(long Id, bool PublicOnly = false) : IRequest<Result<GetByIdCategoryResponse>>;
 
 public record GetByIdCategoryResponse(
     long Id,

@@ -16,7 +16,7 @@ public class GetByIdCollectionController(ISender sender) : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResponse<GetByIdCollectionResponse>>> GetByIdCollection(long id)
     {
-        var result = await sender.Send(new GetByIdCollectionQuery(id));
+        var result = await sender.Send(new GetByIdCollectionQuery(id, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }
