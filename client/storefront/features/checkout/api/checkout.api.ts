@@ -1,5 +1,6 @@
 import apiClient from "@/lib/api-client"
 import { getCartSessionId } from "@/lib/cart-session"
+import { messages } from "@/lib/messages.ar"
 import type { ApiResponse } from "@/types/api"
 import type { CheckoutFormValues } from "../schemas/checkout.schema"
 
@@ -108,6 +109,10 @@ export async function createOrder(payload: CheckoutFormValues): Promise<OrderCon
     { headers: { "X-Cart-Session": sessionId } },
   )
 
-  if (!data.success) throw new Error(data.message ?? "Failed to create order")
+  // Prefer errors[0]: a validation failure puts the field-specific Arabic
+  // message there, while `message` is only the generic "Validation failed".
+  if (!data.success) {
+    throw new Error(data.errors?.[0] ?? data.message ?? messages.checkout.createError)
+  }
   return toConfirmation(data.data!)
 }

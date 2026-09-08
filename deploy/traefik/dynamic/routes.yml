@@ -1,0 +1,69 @@
+# Traefik dynamic configuration — routing and response headers.
+#
+# Routing is by path and entrypoint, not by hostname, so it works today with no
+# DNS and no domain. Every rule here keeps the URL shapes the applications
+# already use, so nothing in the code has to know a proxy exists.
+#
+# When the domain is ready, add `Host(...)` to these rules, move them to the
+# websecure entrypoint, and attach the `le` certResolver. Nothing else changes.
+
+http:
+  routers:
+    # The API shares the storefront's origin on :80. A useful side effect: the
+    # storefront stops being cross-origin, so it needs no CORS at all. The admin
+    # panel is still a different origin and still relies on Cors:AllowedOrigins.
+    api:
+      rule: "PathPrefix(`/api`) || PathPrefix(`/img`) || PathPrefix(`/scalar`) || PathPrefix(`/openapi`)"
+      entryPoints: [web]
+      service: api
+      middlewares: [security-headers]
+      # Must outrank the storefront catch-all below.
+      priority: 100
+
+    storefront:
+      rule: "PathPrefix(`/`)"
+      entryPoints: [web]
+      service: storefront
+      middlewares: [security-headers]
+      priority: 1
+
+    admin:
+      rule: "PathPrefix(`/`)"
+      entryPoints: [adminweb]
+      service: admin
+      middlewares: [security-headers]
+
+  services:
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://api:5101"
+    storefront:
+      loadBalancer:
+        servers:
+          - url: "http://storefront:3001"
+    admin:
+      loadBalancer:
+        servers:
+          - url: "http://admin:3000"
+
+  middlewares:
+    # Transport-level headers live here so all three services get them from one
+    # place. Content-Security-Policy is NOT here: it needs per-request nonces
+    # from Next.js, so it stays in each app's next.config.ts.
+    security-headers:
+      headers:
+        # Verified: Traefik emits no HSTS header at all over a plain HTTP
+        # connection, so this is inert today and starts applying by itself once
+        # the websecure entrypoint is in use. Left without `preload` on purpose —
+        # preloading is effectively irreversible and should not be committed to
+        # before the final domain is settled.
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        contentTypeNosniff: true
+        frameDeny: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customResponseHeaders:
+          # Drop the fingerprinting headers the frameworks add by default.
+          X-Powered-By: ""
+          Server: ""

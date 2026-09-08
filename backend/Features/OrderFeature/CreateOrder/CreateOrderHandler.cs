@@ -2,10 +2,102 @@ using System.Text.Json;
 using backend.Common.Results;
 using backend.Domain.Entities;
 using backend.Infrastructure.Persistence;
+using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend.Features.OrderFeature.CreateOrder;
+
+/// <summary>
+/// Shape-only checks for the one command in the project that an unauthenticated
+/// caller can send. Business rules — which fields guest checkout requires, stock,
+/// shipping zones, payment method — stay in <see cref="CreateOrderHandler"/>.
+///
+/// Two of these caps matter more than the rest: <c>customer_notes</c>,
+/// <c>shipping_address1</c> and <c>shipping_address2</c> are unbounded `text`
+/// columns, so Postgres accepts whatever it is handed and nothing downstream
+/// would have stopped an anonymous caller from writing megabytes per order. The
+/// remaining limits mirror the varchar lengths in AppDbContext, turning what
+/// would be a 500 from the driver into a 400 that names the field.
+///
+/// Messages are Arabic because this is the only command whose failures reach a
+/// shopper rather than an admin.
+/// </summary>
+public class CreateOrderValidator : AbstractValidator<CreateOrderCommand>
+{
+    // Mirrors carts.session_id (varchar 255).
+    private const int SessionIdMax = 255;
+
+    // Unbounded text columns — these numbers are the only limit that exists.
+    // customerNotes matches the storefront's own zod cap so the two agree.
+    private const int CustomerNotesMax = 500;
+    private const int AddressLineMax = 255;
+
+    // Mirror the varchar lengths declared on orders in AppDbContext.
+    private const int NameMax = 100;
+    private const int CityMax = 100;
+    private const int GovernorateMax = 100;
+    private const int CountryMax = 100;
+    private const int CouponCodeMax = 100;
+    private const int PhoneMax = 20;
+
+    public CreateOrderValidator()
+    {
+        RuleFor(x => x.SessionId)
+            .MaximumLength(SessionIdMax)
+            .WithMessage("معرّف جلسة السلة غير صالح");
+
+        RuleFor(x => x.ShippingFirstName)
+            .MaximumLength(NameMax)
+            .WithMessage($"الاسم الأول يجب ألا يتجاوز {NameMax} حرفاً");
+
+        RuleFor(x => x.ShippingLastName)
+            .MaximumLength(NameMax)
+            .WithMessage($"الاسم الأخير يجب ألا يتجاوز {NameMax} حرفاً");
+
+        // Digits, spaces and the punctuation people actually type in a phone
+        // number. Deliberately permissive about format — this is a length and
+        // character-class guard, not an Iraqi numbering-plan check.
+        RuleFor(x => x.ShippingPhone)
+            .MaximumLength(PhoneMax)
+            .WithMessage($"رقم الهاتف يجب ألا يتجاوز {PhoneMax} رقماً")
+            .Matches(@"^[0-9+\-\s()]+$")
+            .WithMessage("رقم الهاتف يحتوي على محارف غير صالحة")
+            .When(x => !string.IsNullOrWhiteSpace(x.ShippingPhone));
+
+        RuleFor(x => x.ShippingAddress1)
+            .MaximumLength(AddressLineMax)
+            .WithMessage($"العنوان يجب ألا يتجاوز {AddressLineMax} حرفاً");
+
+        RuleFor(x => x.ShippingAddress2)
+            .MaximumLength(AddressLineMax)
+            .WithMessage($"تتمة العنوان يجب ألا تتجاوز {AddressLineMax} حرفاً");
+
+        RuleFor(x => x.ShippingCity)
+            .MaximumLength(CityMax)
+            .WithMessage($"المدينة يجب ألا تتجاوز {CityMax} حرفاً");
+
+        RuleFor(x => x.ShippingGovernorate)
+            .MaximumLength(GovernorateMax)
+            .WithMessage($"المحافظة يجب ألا تتجاوز {GovernorateMax} حرفاً");
+
+        RuleFor(x => x.ShippingCountry)
+            .MaximumLength(CountryMax)
+            .WithMessage($"الدولة يجب ألا تتجاوز {CountryMax} حرفاً");
+
+        RuleFor(x => x.CouponCode)
+            .MaximumLength(CouponCodeMax)
+            .WithMessage($"رمز الخصم يجب ألا يتجاوز {CouponCodeMax} حرفاً");
+
+        RuleFor(x => x.CustomerNotes)
+            .MaximumLength(CustomerNotesMax)
+            .WithMessage($"الملاحظات يجب ألا تتجاوز {CustomerNotesMax} حرفاً");
+
+        RuleFor(x => x.PaymentMethod)
+            .MaximumLength(50)
+            .WithMessage("طريقة الدفع غير صالحة");
+    }
+}
 
 public class CreateOrderHandler(AppDbContext context)
     : IRequestHandler<CreateOrderCommand, Result<CreateOrderResponse>>

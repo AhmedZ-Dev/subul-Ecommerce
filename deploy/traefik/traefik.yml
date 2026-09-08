@@ -1,0 +1,45 @@
+# Traefik static configuration.
+#
+# Deliberately uses the FILE provider, not the Docker provider: the Docker
+# provider needs /var/run/docker.sock mounted into the container, and Traefik is
+# the one process here that is exposed to the internet. A compromise there would
+# turn socket access into root on the host. The services are few and stable, so
+# a checked-in routing file costs little and removes that path entirely.
+
+entryPoints:
+  web:
+    address: ":80"
+
+  # Storefront + API move here once a domain exists. Defined now so enabling TLS
+  # is a routing change rather than a restructure.
+  websecure:
+    address: ":443"
+
+  # The admin panel keeps its own entrypoint rather than a hostname, so routing
+  # works today without any DNS. When the domain arrives it becomes a Host rule
+  # on websecure and this entrypoint goes away.
+  adminweb:
+    address: ":3000"
+
+providers:
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO
+
+accessLog: {}
+
+# --- Certificates -----------------------------------------------------------
+# Prepared, intentionally inert: no router references this resolver yet, so
+# Traefik requests nothing. Uncomment together with the TLS routers in
+# dynamic/routes.yml once DNS points at this host, and set ACME_EMAIL.
+#
+# certificatesResolvers:
+#   le:
+#     acme:
+#       email: "{{ ACME_EMAIL }}"
+#       storage: /letsencrypt/acme.json
+#       httpChallenge:
+#         entryPoint: web

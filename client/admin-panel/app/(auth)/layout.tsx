@@ -1,30 +1,19 @@
-import Image from 'next/image';
-import { messages } from '@/lib/messages.ar';
-
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center bg-muted/40 p-6">
-      <div className="mb-8 text-center">
-        <h1 className="sr-only">{messages.common.companyName}</h1>
-        <Image
-          src="/assets/logo_subul-brand_full_20260829_black.png"
-          alt={messages.common.companyName}
-          width={112}
-          height={112}
-          priority
-          className="mx-auto h-28 w-28 object-contain dark:hidden"
-        />
-        <Image
-          src="/assets/logo_subul-brand_full_20260829_white.png"
-          alt={messages.common.companyName}
-          width={112}
-          height={112}
-          priority
-          className="mx-auto hidden h-28 w-28 object-contain dark:block"
-        />
-        <p className="mt-3 text-sm text-muted-foreground">{messages.auth.loginDescription}</p>
+    <div className="auth-scene relative flex min-h-dvh items-center justify-center overflow-hidden p-6">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <span className="auth-blob auth-blob-1" />
+        <span className="auth-blob auth-blob-2" />
+        <span className="auth-blob auth-blob-3" />
+        <span className="auth-blob auth-blob-4" />
       </div>
-      {children}
+
+      <div
+        aria-hidden
+        className="auth-stage pointer-events-none absolute inset-x-6 inset-y-10 hidden rounded-3xl md:block lg:inset-x-24 lg:inset-y-16"
+      />
+
+      <div className="relative z-10 w-full max-w-sm">{children}</div>
     </div>
   );
 }

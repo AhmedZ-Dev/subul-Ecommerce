@@ -14,6 +14,11 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 # Public origin used for canonical and Open Graph URLs.
 ARG NEXT_PUBLIC_SITE_URL
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+# Where the SERVER reaches the API. Needed at build time, not just at runtime:
+# next.config's rewrites() is evaluated during the build and frozen into
+# routes-manifest.json, so setting this only as a runtime variable has no effect.
+ARG INTERNAL_API_ORIGIN
+ENV INTERNAL_API_ORIGIN=$INTERNAL_API_ORIGIN
 RUN npm run build
 
 FROM node:20-alpine AS runner

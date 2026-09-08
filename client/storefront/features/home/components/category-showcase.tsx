@@ -1,7 +1,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { getCategoryName, messages } from "@/lib/messages.ar"
-import { resolveAssetUrl } from "@/lib/asset-url"
+import { resolveAssetPath } from "@/lib/asset-url"
 import type { CategoryListItem } from "@/features/category"
 import { SectionHeader } from "./section-header"
 
@@ -23,7 +23,7 @@ export function CategoryShowcase({ categories }: CategoryShowcaseProps) {
       <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
         {categories.map((category) => {
           const name = getCategoryName(category.nameAr, category.nameEn)
-          const imageUrl = resolveAssetUrl(category.imageUrl)
+          const imageUrl = resolveAssetPath(category.imageUrl)
 
           return (
             <Link

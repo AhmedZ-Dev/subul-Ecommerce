@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Minus, Package, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { resolveAssetUrl } from "@/lib/asset-url"
+import { resolveAssetPath } from "@/lib/asset-url"
 import { getProductName, formatCurrency, messages } from "@/lib/messages.ar"
 import { useRemoveCartItem, useUpdateCartItem } from "../../hooks/useCartMutations"
 import type { CartItem } from "../../types"
@@ -17,7 +17,7 @@ export function CartItemRow({ item }: CartItemRowProps) {
   const updateItem = useUpdateCartItem()
   const removeItem = useRemoveCartItem()
   const name = getProductName(item.productNameAr, item.productNameEn)
-  const imageUrl = resolveAssetUrl(item.imageUrl)
+  const imageUrl = resolveAssetPath(item.imageUrl)
 
   return (
     <div className="flex flex-col gap-4 border-b py-4 sm:flex-row sm:items-center">

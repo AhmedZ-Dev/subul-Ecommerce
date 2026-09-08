@@ -115,6 +115,8 @@ export const messages = {
     loginRateLimited: (seconds: number) =>
       `تم تجاوز عدد محاولات تسجيل الدخول. حاول مرة أخرى بعد ${seconds} ثانية.`,
     sessionExpired: "انتهت الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+    showPassword: "إظهار كلمة المرور",
+    hidePassword: "إخفاء كلمة المرور",
     loggingIn: "جاري تسجيل الدخول…",
     loggingOut: "جاري تسجيل الخروج…",
     validation: {
