@@ -112,6 +112,9 @@ services:
       - api
     environment:
       NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://49.12.219.180/api}
+      # Server-side Auth.js calls must stay on Docker's internal network.
+      # Do not expose this as NEXT_PUBLIC_*; browsers cannot resolve `api`.
+      INTERNAL_API_URL: ${INTERNAL_API_URL:-http://api:5101/api}
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in the VM .env file}
       AUTH_TRUST_HOST: "true"
 
