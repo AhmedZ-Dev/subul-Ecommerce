@@ -24,6 +24,11 @@ public class GetByIdCollectionHandler(AppDbContext context)
         if (collection is null)
             return Result<GetByIdCollectionResponse>.Failure("Collection not found");
 
+        // A row hidden from the storefront answers exactly like a missing
+        // one: a distinct error would confirm the id/slug exists.
+        if (query.PublicOnly && !collection.IsActive)
+            return Result<GetByIdCollectionResponse>.Failure("Collection not found");
+
         var productsResponse = await MapCollectionProductsAsync(
             context,
             collection.CollectionProducts.Select(cp => (cp.ProductId, cp.SortOrder)).ToList(),

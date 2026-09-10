@@ -16,7 +16,7 @@ public class GetByIdCategoryController(ISender sender) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiResponse<GetByIdCategoryResponse>>> GetByIdCategory(long id)
     {
-        var result = await sender.Send(new GetByIdCategoryQuery(id));
+        var result = await sender.Send(new GetByIdCategoryQuery(id, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }

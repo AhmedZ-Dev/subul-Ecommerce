@@ -3,7 +3,11 @@ import { CredentialsSignin } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
 const BACKEND_API =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5101/api';
+  // Auth.js runs on the Next.js server, which is inside the `admin` container.
+  // Use Docker's service address there; `NEXT_PUBLIC_API_URL` is for browsers.
+  process.env.INTERNAL_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:5101/api';
 
 class RateLimitedCredentialsSignin extends CredentialsSignin {
   constructor(retryAfterSeconds: number) {

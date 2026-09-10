@@ -17,6 +17,11 @@ public class ListProductPaginatedController(ISender sender) : ControllerBase
     public async Task<ActionResult<ApiResponse<ListProductPaginatedResponse>>> ListProducts(
         [FromQuery] ListProductPaginatedQuery query)
     {
+        // Pin the visibility filter for anonymous callers so this public
+        // route cannot be used to enumerate unpublished products (?status=draft).
+        if (this.IsAnonymousCaller())
+            query = query with { Status = CatalogVisibilityExtensions.PublicProductStatus };
+
         var result = await sender.Send(query);
         return result.ToActionResult();
     }

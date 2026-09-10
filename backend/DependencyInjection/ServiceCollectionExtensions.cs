@@ -42,6 +42,16 @@ public static class ServiceCollectionExtensions
             .Validate(options => options.WindowSeconds > 0, "RedisRateLimit:WindowSeconds must be greater than zero.")
             .Validate(options => options.LoginPermitLimit > 0, "RedisRateLimit:LoginPermitLimit must be greater than zero.")
             .Validate(options => options.LoginWindowSeconds > 0, "RedisRateLimit:LoginWindowSeconds must be greater than zero.")
+            // Enabled without a Redis connection used to boot fine and silently
+            // enforce nothing: the limiter is only registered below when the
+            // connection string is present, and the middleware passes every
+            // request through when it cannot resolve one. Refuse to start
+            // instead, so a missing environment variable is loud rather than
+            // invisible. Turning the feature off stays an explicit choice.
+            .Validate(
+                options => !options.Enabled || !string.IsNullOrWhiteSpace(redisConnectionString),
+                "RedisRateLimit:Enabled is true but ConnectionStrings:Redis is not configured. " +
+                "Set the connection string, or set RedisRateLimit:Enabled to false to run without rate limiting.")
             .ValidateOnStart();
 
         if (!string.IsNullOrWhiteSpace(redisConnectionString))

@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Package } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { resolveAssetUrl } from "@/lib/asset-url"
+import { resolveAssetPath } from "@/lib/asset-url"
 import { formatCurrency, getProductName, messages } from "@/lib/messages.ar"
 import { cn } from "@/lib/utils"
 import type { StorefrontProductListItem } from "../../types"
@@ -23,7 +23,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const name = getProductName(product.nameAr, product.nameEn)
   const outOfStock = product.stockQuantity <= 0
   const discount = getDiscountPercent(product.price, product.compareAtPrice)
-  const imageUrl = resolveAssetUrl(product.primaryImageUrl)
+  const imageUrl = resolveAssetPath(product.primaryImageUrl)
   const hasComparePrice =
     product.compareAtPrice != null && product.compareAtPrice > product.price
 

@@ -2,7 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft } from "lucide-react"
 import { getCategoryName, messages } from "@/lib/messages.ar"
-import { resolveAssetUrl } from "@/lib/asset-url"
+import { resolveAssetPath } from "@/lib/asset-url"
 import type { CollectionListItem } from "@/features/collection"
 import { SectionHeader } from "./section-header"
 import { cn } from "@/lib/utils"
@@ -57,7 +57,7 @@ function CollectionTile({
   className?: string
 }) {
   const name = getCategoryName(collection.nameAr, collection.nameEn)
-  const imageUrl = resolveAssetUrl(collection.imageUrl)
+  const imageUrl = resolveAssetPath(collection.imageUrl)
 
   return (
     <Link

@@ -16,7 +16,7 @@ public class GetByIdShippingZoneController(ISender sender) : ControllerBase
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResponse<GetByIdShippingZoneResponse>>> GetByIdShippingZone(long id)
     {
-        var result = await sender.Send(new GetByIdShippingZoneQuery(id));
+        var result = await sender.Send(new GetByIdShippingZoneQuery(id, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }

@@ -30,6 +30,8 @@ Full stack via Docker: `docker compose up` (postgres 17 + api + admin + storefro
 
 Local dev needs a Postgres matching the `DefaultConnection` in `backend/appsettings.json`, plus a `Jwt:Secret` of at least 32 chars in user-secrets or `appsettings.Development.json` — the app throws at startup otherwise. In Development, `DbSeeder` seeds data on boot.
 
+It also needs Redis. `RedisRateLimit:Enabled` defaults to true, and startup now **fails** if it is on without a `ConnectionStrings:Redis` — that combination used to boot and enforce nothing. If Redis is configured but unreachable, `POST api/auth/login` returns 429 (it fails closed, so an outage cannot be used to strip brute-force protection) while every other route still serves. To work without Redis, set `RedisRateLimit:Enabled` to `false` in `appsettings.Development.json` — an explicit opt-out rather than a silent one.
+
 ## Architecture
 
 ```

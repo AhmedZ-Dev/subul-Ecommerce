@@ -1,7 +1,6 @@
 using backend.Common.Extensions;
 using backend.Common.Responses;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Features.PaymentMethodFeature.ListPaymentMethodPaginated;
@@ -11,8 +10,11 @@ namespace backend.Features.PaymentMethodFeature.ListPaymentMethodPaginated;
 [Tags("Payment Methods")]
 public class ListPaymentMethodPaginatedController(ISender sender) : ControllerBase
 {
-    /// <summary>Storefront checkout — must remain [AllowAnonymous].</summary>
-    [AllowAnonymous]
+    /// <summary>
+    /// Admin only — the response carries GatewayConfig (gateway API keys and
+    /// webhook secrets). The storefront reads GET api/payment-methods/public,
+    /// which projects a field set that is safe to publish.
+    /// </summary>
     [HttpGet]
     public async Task<ActionResult<ApiResponse<ListPaymentMethodPaginatedResponse>>> ListPaymentMethods(
         [FromQuery] ListPaymentMethodPaginatedQuery query)

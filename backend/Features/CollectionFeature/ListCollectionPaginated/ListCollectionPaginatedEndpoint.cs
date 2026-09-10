@@ -17,6 +17,11 @@ public class ListCollectionPaginatedController(ISender sender) : ControllerBase
     public async Task<ActionResult<ApiResponse<ListCollectionPaginatedResponse>>> ListCollectionPaginated(
         [FromQuery] ListCollectionPaginatedQuery query)
     {
+        // Pin the visibility filter for anonymous callers so this public
+        // route cannot be used to enumerate disabled collections.
+        if (this.IsAnonymousCaller())
+            query = query with { IsActive = true };
+
         var result = await sender.Send(query);
         return result.ToActionResult();
     }

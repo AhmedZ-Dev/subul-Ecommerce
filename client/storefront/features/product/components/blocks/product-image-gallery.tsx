@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { resolveAssetUrl } from "@/lib/asset-url"
+import { resolveAssetPath } from "@/lib/asset-url"
 import { messages } from "@/lib/messages.ar"
 import type { ProductImageInfo } from "../../types"
 
@@ -19,7 +19,7 @@ export function ProductImageGallery({ images, productName }: ProductImageGallery
   })
   const [activeIndex, setActiveIndex] = useState(0)
   const active = sorted[activeIndex]
-  const activeImageUrl = resolveAssetUrl(active?.imageUrl)
+  const activeImageUrl = resolveAssetPath(active?.imageUrl)
 
   if (sorted.length === 0 || !activeImageUrl) {
     return (
@@ -46,7 +46,7 @@ export function ProductImageGallery({ images, productName }: ProductImageGallery
       {sorted.length > 1 && (
         <div className="flex gap-2 overflow-x-auto">
           {sorted.map((img, i) => {
-            const thumbUrl = resolveAssetUrl(img.imageUrl)
+            const thumbUrl = resolveAssetPath(img.imageUrl)
             if (!thumbUrl) return null
 
             return (

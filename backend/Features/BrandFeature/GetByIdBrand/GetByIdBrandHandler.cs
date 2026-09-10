@@ -19,6 +19,11 @@ public class GetByIdBrandHandler(AppDbContext context)
         if (brand is null)
             return Result<GetByIdBrandResponse>.Failure("Brand not found");
 
+        // A row hidden from the storefront answers exactly like a missing
+        // one: a distinct error would confirm the id/slug exists.
+        if (query.PublicOnly && !brand.IsActive)
+            return Result<GetByIdBrandResponse>.Failure("Brand not found");
+
         var productCount = await context.Products.CountAsync(
             p => p.BrandId == brand.Id,
             cancellationToken);

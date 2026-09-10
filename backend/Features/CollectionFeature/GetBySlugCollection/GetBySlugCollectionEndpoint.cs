@@ -17,7 +17,7 @@ public class GetBySlugCollectionController(ISender sender) : ControllerBase
     [HttpGet("{slug}")]
     public async Task<ActionResult<ApiResponse<GetByIdCollectionResponse>>> GetBySlugCollection(string slug)
     {
-        var result = await sender.Send(new GetBySlugCollectionQuery(slug));
+        var result = await sender.Send(new GetBySlugCollectionQuery(slug, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }

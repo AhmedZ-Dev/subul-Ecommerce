@@ -24,8 +24,14 @@ async function resolveAccessToken(): Promise<string | null> {
   return null;
 }
 
+const apiBaseUrl = typeof window === 'undefined'
+  ? (process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL)
+  : process.env.NEXT_PUBLIC_API_URL;
+
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5101/api',
+  // Server Components run inside Docker, where `localhost` is the admin
+  // container. Browsers must keep using the public API origin instead.
+  baseURL: apiBaseUrl ?? 'http://localhost:5101/api',
   headers: {
     'Content-Type': 'application/json',
   },

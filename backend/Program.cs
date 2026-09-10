@@ -7,9 +7,11 @@ using backend.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using System.Net;
 using System.Text;
 
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
@@ -19,7 +21,16 @@ var builder = WebApplication.CreateBuilder(args);
 var maxImageBytes = builder.Configuration
     .GetSection(ImageStorageOptions.SectionName)
     .GetValue<long>("MaxFileSizeBytes", 5_242_880);
-var multipartLimit = maxImageBytes + 65_536;
+var multipartLimit = maxImageBytes + ImageStorageOptions.MultipartOverheadBytes;
+
+// Kestrel's body limit is global. Sizing it for image uploads handed the same
+// multi-megabyte allowance to every JSON endpoint, including the unauthenticated
+// POST api/orders — enough to write megabytes of text per request into columns
+// that have no length limit. The global cap is therefore sized for JSON, and the
+// three upload actions raise it for themselves via [ImageUploadSizeLimit].
+// A request over the cap is rejected by Kestrel with 413 before the body is read.
+var maxJsonBodyBytes = builder.Configuration
+    .GetValue<long>("RequestLimits:MaxJsonBodyBytes", 262_144);
 
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -28,7 +39,7 @@ builder.Services.Configure<FormOptions>(options =>
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = multipartLimit;
+    options.Limits.MaxRequestBodySize = maxJsonBodyBytes;
 });
 
 builder.Services.AddControllers();
@@ -75,10 +86,62 @@ if (corsOrigins.Length > 0)
     });
 }
 
+// Behind Traefik the peer address is the proxy, not the caller. Without this the
+// rate limiter buckets the entire internet under one identifier (a self-inflicted
+// outage at 120 req/min) and Order.IpAddress records the proxy on every order.
+//
+// The default options trust only loopback, which is not the proxy's address on a
+// Docker network — so the headers would be dropped silently. The trusted range is
+// therefore explicit, and deliberately narrow: accepting X-Forwarded-For from
+// anywhere would let a caller spoof it and mint a fresh rate-limit bucket per
+// request, which is worse than not reading the header at all.
+var trustedProxyNetworks = builder.Configuration
+    .GetSection("ForwardedHeaders:TrustedNetworks")
+    .Get<string[]>() ?? [];
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+
+    foreach (var network in trustedProxyNetworks)
+    {
+        var parts = network.Split('/', 2);
+        if (parts.Length == 2 &&
+            IPAddress.TryParse(parts[0], out var prefix) &&
+            int.TryParse(parts[1], out var prefixLength))
+        {
+            // Qualified because Microsoft.AspNetCore.HttpOverrides declares a
+            // legacy IPNetwork of its own; KnownIPNetworks takes the BCL type.
+            options.KnownIPNetworks.Add(new System.Net.IPNetwork(prefix, prefixLength));
+        }
+        else if (IPAddress.TryParse(network, out var proxyAddress))
+        {
+            options.KnownProxies.Add(proxyAddress);
+        }
+        else
+        {
+            throw new InvalidOperationException(
+                $"ForwardedHeaders:TrustedNetworks contains '{network}', which is neither an IP address nor a CIDR range.");
+        }
+    }
+});
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
+
+// First in the pipeline: everything downstream — rate limiting, HTTPS
+// redirection, logging — should see the caller's address and scheme, not the
+// proxy's.
+if (trustedProxyNetworks.Length > 0)
+{
+    app.UseForwardedHeaders();
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 

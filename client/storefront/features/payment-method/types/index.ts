@@ -7,7 +7,6 @@ export interface PaymentMethodDto {
   iconUrl: string | null
   instructionsEn: string | null
   instructionsAr: string | null
-  isActive: boolean
   sortOrder: number
 }
 

@@ -25,6 +25,11 @@ public class GetBySlugCategoryHandler(AppDbContext context)
         if (category is null)
             return Result<GetByIdCategoryResponse>.Failure("Category not found");
 
+        // A row hidden from the storefront answers exactly like a missing
+        // one: a distinct error would confirm the id/slug exists.
+        if (query.PublicOnly && !category.IsActive)
+            return Result<GetByIdCategoryResponse>.Failure("Category not found");
+
         var productCount = await context.Products.CountAsync(
             p => p.CategoryId == category.Id,
             cancellationToken);

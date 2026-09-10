@@ -3,7 +3,7 @@ using MediatR;
 
 namespace backend.Features.ProductFeature.GetByIdProduct;
 
-public record GetByIdProductQuery(long Id) : IRequest<Result<GetByIdProductResponse>>;
+public record GetByIdProductQuery(long Id, bool PublicOnly = false) : IRequest<Result<GetByIdProductResponse>>;
 
 public record GetByIdProductResponse(
     long Id,

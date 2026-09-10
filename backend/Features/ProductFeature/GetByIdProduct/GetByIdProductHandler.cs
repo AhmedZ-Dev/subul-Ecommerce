@@ -24,6 +24,11 @@ public class GetByIdProductHandler(AppDbContext context)
         if (product is null)
             return Result<GetByIdProductResponse>.Failure("Product not found");
 
+        // A row hidden from the storefront answers exactly like a missing
+        // one: a distinct error would confirm the id/slug exists.
+        if (query.PublicOnly && !string.Equals(product.Status, "active", StringComparison.OrdinalIgnoreCase))
+            return Result<GetByIdProductResponse>.Failure("Product not found");
+
         ProductCategoryInfo? categoryInfo = product.Category is not null
             ? new ProductCategoryInfo(product.Category.Id, product.Category.NameEn, product.Category.NameAr, product.Category.Slug)
             : null;

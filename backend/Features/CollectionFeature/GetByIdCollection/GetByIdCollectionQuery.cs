@@ -5,7 +5,7 @@ using MediatR;
 
 namespace backend.Features.CollectionFeature.GetByIdCollection;
 
-public record GetByIdCollectionQuery(long Id) : IRequest<Result<GetByIdCollectionResponse>>;
+public record GetByIdCollectionQuery(long Id, bool PublicOnly = false) : IRequest<Result<GetByIdCollectionResponse>>;
 
 public record GetByIdCollectionResponse(
     long Id,

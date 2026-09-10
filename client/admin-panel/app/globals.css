@@ -160,3 +160,109 @@
     @apply font-sans;
     }
 }
+
+/* ─────────────────────────────────────────────
+   شاشة المصادقة — زجاج فاتح على تدرّج برونزي ناعم
+   لتغيير اللون العام غيّر --auth-hue فقط
+   ───────────────────────────────────────────── */
+.auth-scene {
+  --auth-hue: 60; /* برونزي (هوية سبل) — 250 = أزرق */
+  background:
+    radial-gradient(88% 68% at 18% 6%, oklch(0.96 0.05 calc(var(--auth-hue) + 15)) 0%, transparent 62%),
+    radial-gradient(85% 78% at 88% 96%, oklch(0.78 0.09 calc(var(--auth-hue) - 8)) 0%, transparent 66%),
+    linear-gradient(155deg, oklch(0.90 0.05 calc(var(--auth-hue) + 10)) 0%, oklch(0.84 0.07 var(--auth-hue)) 55%, oklch(0.77 0.08 calc(var(--auth-hue) - 5)) 100%);
+}
+
+.auth-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  opacity: 0.8;
+  will-change: transform;
+}
+
+.auth-blob-1 {
+  inset-block-start: -6%;
+  inset-inline-start: 10%;
+  block-size: 20rem;
+  inline-size: 20rem;
+  background: radial-gradient(circle at 32% 28%, oklch(0.99 0.06 var(--auth-hue)) 0%, oklch(0.95 0.09 var(--auth-hue)) 55%, transparent 72%);
+  animation: auth-float-a 18s ease-in-out infinite;
+}
+
+.auth-blob-2 {
+  inset-block-end: -10%;
+  inset-inline-end: 6%;
+  block-size: 24rem;
+  inline-size: 24rem;
+  background: radial-gradient(circle at 60% 38%, oklch(0.96 0.07 calc(var(--auth-hue) - 12)) 0%, oklch(0.90 0.09 calc(var(--auth-hue) - 12)) 58%, transparent 74%);
+  animation: auth-float-b 22s ease-in-out infinite;
+}
+
+.auth-blob-3 {
+  inset-block-start: 26%;
+  inset-inline-end: 24%;
+  block-size: 14rem;
+  inline-size: 14rem;
+  background: radial-gradient(circle at 45% 40%, oklch(1 0.03 calc(var(--auth-hue) + 18)) 0%, oklch(0.97 0.05 calc(var(--auth-hue) + 18)) 60%, transparent 75%);
+  opacity: 0.85;
+  animation: auth-float-c 26s ease-in-out infinite;
+}
+
+.auth-blob-4 {
+  inset-block-end: 14%;
+  inset-inline-start: -4%;
+  block-size: 17rem;
+  inline-size: 17rem;
+  background: radial-gradient(circle at 42% 58%, oklch(0.97 0.08 calc(var(--auth-hue) + 8)) 0%, oklch(0.92 0.10 calc(var(--auth-hue) + 8)) 60%, transparent 75%);
+  opacity: 0.7;
+  animation: auth-float-b 20s ease-in-out infinite reverse;
+}
+
+/* اللوح الزجاجي الخارجي خلف البطاقة */
+.auth-stage {
+  background: linear-gradient(140deg, oklch(1 0 0 / 0.42), oklch(1 0 0 / 0.14));
+  border: 1px solid oklch(1 0 0 / 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 30px 80px -50px oklch(0.35 0.04 60 / 0.5);
+}
+
+/* البطاقة الزجاجية الفاتحة — أبيض شفاف يضمن تباين نص داكن ≥ 4.5:1 */
+.auth-glass {
+  background:
+    linear-gradient(150deg, oklch(1 0 0 / 0.62) 0%, oklch(1 0 0 / 0.46) 45%, oklch(1 0 0 / 0.38) 100%),
+    oklch(0.995 0.008 var(--auth-hue) / 0.62);
+  border: 1px solid oklch(1 0 0 / 0.75);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow:
+    0 32px 64px -22px oklch(0.32 0.05 var(--auth-hue) / 0.30),
+    0 4px 14px -6px oklch(0.32 0.05 var(--auth-hue) / 0.16),
+    inset 0 1px 0 0 oklch(1 0 0 / 0.85);
+}
+
+/* المتصفحات بلا backdrop-filter: سطح معتم بديل يحفظ التباين */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .auth-glass { background: oklch(0.995 0.005 var(--auth-hue) / 0.95); }
+  .auth-stage { background: oklch(1 0 0 / 0.35); }
+}
+
+@keyframes auth-float-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(2.5rem, 2rem, 0) scale(1.08); }
+}
+
+@keyframes auth-float-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-3rem, -2.5rem, 0) scale(1.12); }
+}
+
+@keyframes auth-float-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.5rem, -3rem, 0) scale(0.9); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-blob { animation: none; }
+}

@@ -16,7 +16,7 @@ public class GetByIdBrandController(ISender sender) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<ApiResponse<GetByIdBrandResponse>>> GetByIdBrand(long id)
     {
-        var result = await sender.Send(new GetByIdBrandQuery(id));
+        var result = await sender.Send(new GetByIdBrandQuery(id, PublicOnly: this.IsAnonymousCaller()));
         return result.ToActionResult();
     }
 }
