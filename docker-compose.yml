@@ -95,6 +95,14 @@ services:
       Jwt__Issuer: ${JWT_ISSUER:-subul-admin}
       Jwt__Audience: ${JWT_AUDIENCE:-subul-admin-panel}
       Jwt__AccessTokenMinutes: ${JWT_ACCESS_TOKEN_MINUTES:-480}
+      # The single first admin account, created only while admin_users is empty.
+      # Leaving ADMIN_BOOTSTRAP_PASSWORD unset is the recommended path: the API
+      # generates one, logs it once at Warning, and requires it to be changed at
+      # first sign-in. Read it with `docker compose logs api`.
+      AdminBootstrap__Enabled: ${ADMIN_BOOTSTRAP_ENABLED:-true}
+      AdminBootstrap__Name: ${ADMIN_BOOTSTRAP_NAME:-Administrator}
+      AdminBootstrap__Email: ${ADMIN_BOOTSTRAP_EMAIL:-admin@subul.iq}
+      AdminBootstrap__Password: ${ADMIN_BOOTSTRAP_PASSWORD:-}
     volumes:
       - ./img:/img
 

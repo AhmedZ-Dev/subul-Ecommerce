@@ -65,6 +65,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Secret)),
             ClockSkew = TimeSpan.Zero,
         };
+
+        // A signed token alone cannot tell us that the account behind it was
+        // disabled or had its password reset five minutes ago. AdminSessionValidator
+        // reconciles both against the row before the request is authorized.
+        options.Events = new JwtBearerEvents
+        {
+            OnTokenValidated = AdminSessionValidator.ValidateAsync,
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -130,6 +138,13 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
     }
 });
 
+builder.Services.AddOptions<AdminBootstrapOptions>()
+    .Bind(builder.Configuration.GetSection(AdminBootstrapOptions.SectionName))
+    .Validate(
+        options => !options.Enabled || !string.IsNullOrWhiteSpace(options.Email),
+        "AdminBootstrap:Email must be set while AdminBootstrap:Enabled is true.")
+    .ValidateOnStart();
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
@@ -169,6 +184,8 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseAuthentication();
 app.UseMiddleware<RedisRateLimitMiddleware>();
 app.UseAuthorization();
+// After authorization, so an anonymous caller still gets 401 rather than 403.
+app.UseMiddleware<PasswordChangeRequiredMiddleware>();
 app.UseOutputCache();
 
 app.MapControllers();
@@ -177,6 +194,11 @@ if (app.Environment.IsDevelopment())
 {
     await DbSeeder.SeedAsync(app.Services);
 }
+
+// Runs in every environment, but only on an empty admin_users table — in
+// Development the seeder above has already filled it, so this is the production
+// path that creates the single first account.
+await AdminBootstrapper.RunAsync(app.Services);
 
 app.Run();
 
